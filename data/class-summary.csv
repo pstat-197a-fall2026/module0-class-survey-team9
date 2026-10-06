@@ -1,0 +1,31 @@
+group,category,n,percent
+standing,Senior,49,89.1
+standing,Junior,5,9.1
+standing,Junior (senior credits),1,1.8
+gender,Male,30,54.5
+gender,Female,23,41.8
+gender,Another self-description,1,1.8
+gender,Prefer not to say,1,1.8
+race,Asian,37,67.3
+race,Caucasian,8,14.5
+race,Multiracial,6,10.9
+race,Prefer not to say,3,5.5
+race,American Indian or Alaska Native,1,1.8
+primary_major,Statistics and Data Science,52,94.5
+primary_major,Data Science (as reported),1,1.8
+primary_major,Mathematics / Statistics (as reported),1,1.8
+primary_major,Statistics and Data Science / Economics,1,1.8
+second_major,None reported,37,67.3
+second_major,Applied Mathematics,3,5.5
+second_major,Economics,3,5.5
+second_major,Mathematics,3,5.5
+second_major,Communication,2,3.6
+second_major,Economics and Accounting,2,3.6
+second_major,Psychological and Brain Sciences,2,3.6
+second_major,Biology,1,1.8
+second_major,Environmental Studies,1,1.8
+second_major,Geography with GIS Emphasis,1,1.8
+consent,Yes / Yes,49,89.1
+consent,Yes / No,2,3.6
+consent,No / Yes,0,0.0
+consent,No / No,4,7.3
