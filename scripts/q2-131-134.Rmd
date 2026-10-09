@@ -18,5 +18,68 @@ background <- read_csv(here('data', 'background-clean.csv'))
 interest   <- read_csv(here('data', 'interest-clean.csv'))
 ```
 
+# joining tables
+```{r}
+joined <- inner_join(background, interest, by = 'response_id')
+nrow(joined)
+```
 
+# filter to students who took both 131 and 134
+```{r}
+q2_134 <- joined %>%
+  filter(str_detect(courses, fixed('PSTAT 131')),
+         str_detect(courses, fixed('PSTAT 134')))
+nrow(q2_134)
+```
 
+# flagging ml areas
+```{r}
+q2_134 <- q2_134 |>
+  mutate(
+    deep_learning = str_detect(areas, fixed('Deep learning and neural networks')),
+    stat_inference = str_detect(areas, fixed('Statistical models and inference, generally')),
+    images = str_detect(areas, fixed('Analysis or classification of images')),
+    nlp = str_detect(areas, fixed('Natural language processing and analysis of text')),
+    data_eng = str_detect(areas, fixed('Data acquisition and engineering')),
+    predictive = str_detect(areas, fixed('Predictive modeling, generally')),
+    ml_score = deep_learning + stat_inference + images + nlp + data_eng + predictive
+    
+  )
+
+```
+
+# Results
+
+```{r}
+q2_134 |>
+  summarise(n = n(),
+            across(c(deep_learning, stat_inference, images, nlp, data_eng, predictive), sum),
+            avg_ml_score = mean(ml_score))
+
+q2_134 |>
+  count(ml_score)
+
+q2_134 |>
+  count(language)
+
+```
+
+# Plot
+```{r}
+q2_134 |>
+  summarise(`Deep learning` = mean(deep_learning),
+            `Stat inference` = mean(stat_inference),
+            `Image analysis` = mean(images),
+            `NLP` = mean(nlp),
+            `Data engineering` = mean(data_eng),
+            `Predictive modeling` = mean(predictive)) %>%
+  pivot_longer(everything(), names_to = 'area', values_to = 'pct') |>
+  ggplot(aes(x = reorder(area, -pct), y = pct)) +
+  geom_col(fill = 'steelblue') +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(x = 'ML area', y = '% of students interested',
+       title = 'ML interest of students who took PSTAT 131 + 134 (n = 13)') +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+```
+So out of the 13 students who took 131 and 145, the interest was highest in deep learning and predictive modeling (both having like 85%?).
