@@ -1,0 +1,22 @@
+---
+title: 'Q2: 131 + 134 Group'
+author: "Khoi Huynh"
+date: "2026-10-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 2: 131 + 134 Group
+
+```{r, message = FALSE}
+library(tidyverse)
+library(here)
+background <- read_csv(here('data', 'background-clean.csv'))
+interest   <- read_csv(here('data', 'interest-clean.csv'))
+```
+
+
+
