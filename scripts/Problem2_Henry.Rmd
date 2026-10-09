@@ -1,30 +1,171 @@
 ---
 title: "Problem 2 (Henry)"
-author: "Henry Ding (A233N59)"
 date: "2026-10-09"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(tidyr)
 ```
 
-## R Markdown
+# Problem 2
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Do students who have taken both 131 and 134 report greater interest in machine-learning-related fields than students who have taken 131 only?
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+We want to see if taking only PSTAT 131 has any correlation in machine learning domain interests.
 
-```{r cars}
-summary(cars)
+```{r}
+problem2 <- read_csv("~/Desktop/PSTAT197A/module0-class-survey-team9/data/problem2.csv")
+
+dim(problem2)
+
+head(problem2)
 ```
 
-## Including Plots
+We are assuming that students who have taken PSTAT 134 have also taken PSTAT 131 since it is a prerequisite to that course. We confirmed this step by checking that every student who listed PSTAT 134 also included PSTAT 131.
 
-You can also embed plots, for example:
+```{r}
+course_check <- problem2 %>%
+  mutate(
+    took_131 = str_detect(courses, "\\bPSTAT 131\\b"),
+    took_134 = str_detect(courses, "\\bPSTAT 134\\b")
+  )
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Show everyone who took PSTAT 134 but not PSTAT 131
+course_check %>%
+  filter(took_134 & !took_131) %>%
+  select(response_id, courses)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Let's see the potential options for area interests:
+
+```{r}
+possible_values <- unique(unlist(strsplit(as.character(problem2$areas), split = ",")))
+
+possible_values
+```
+
+Out of the eleven options, we will define 'machine learning' interests as one of the following six options:
+
+```{r}
+ml_areas <- c(
+  "Analysis or classification of images",
+  "Deep learning and neural networks",
+  "Data acquisition and engineering",
+  "Natural language processing and analysis of text",
+  "Predictive modeling, generally",
+  "Statistical models and inference, generally"
+)
+```
+
+### PSTAT 131 vs non-PSTAT 131
+
+```{r}
+ml_data <- problem2 %>%
+  mutate(
+    took_131 = str_detect(
+      coalesce(courses, ""),
+      "\\bPSTAT 131\\b"
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  separate_rows(areas, sep = ",\\s*") %>%
+  mutate(selected = areas %in% ml_areas) %>%
+  group_by(response_id, took_131) %>%
+  summarise(
+    n_ml_areas = sum(selected),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    course_group = if_else(
+      took_131,
+      "Took PSTAT 131",
+      "Did not take PSTAT 131"
+    )
+  )
+```
+
+```{r}
+ml_data %>%
+  group_by(course_group) %>%
+  summarise(
+    n = n(),
+    mean_ml_areas = mean(n_ml_areas),
+    median_ml_areas = median(n_ml_areas),
+    .groups = "drop"
+  )
+```
+
+```{r}
+ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
+                    fill = course_group)) +
+  geom_boxplot() +
+  labs(
+    title = "ML-Related Interests by PSTAT 131 Enrollment",
+    x = "Course Group",
+    y = "Number of ML-Related Areas Selected"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r}
+wilcox.test(
+  n_ml_areas ~ course_group,
+  data = ml_data,
+  exact = FALSE
+)
+```
+
+### Both PSTAT 131 and PSTAT 134 vs Only PSTAT 131
+
+```{r}
+ml_data <- problem2 %>%
+  mutate(
+    took_131 = str_detect(courses, "\\bPSTAT 131\\b"),
+    took_134 = str_detect(courses, "\\bPSTAT 134\\b"),
+    course_group = case_when(
+      took_131 & took_134 ~ "Both courses",
+      took_131 & !took_134 ~ "PSTAT 131 only",
+      TRUE ~ NA_character_
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  filter(!is.na(course_group)) %>%
+  separate_rows(areas, sep = ",\\s*") %>%
+  mutate(selected = areas %in% ml_areas) %>%
+  group_by(response_id, course_group) %>%
+  summarise(
+    n_ml_areas = sum(selected),
+    .groups = "drop"
+  )
+```
+
+```{r}
+ml_data %>%
+  group_by(course_group) %>%
+  summarise(
+    n = n(),
+    mean_domains = mean(n_ml_areas),
+    median_domains = median(n_ml_areas),
+    .groups = "drop"
+  )
+```
+
+```{r}
+ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
+                    fill = course_group)) +
+  geom_boxplot() +
+  labs(
+    title = "ML-Related Interests by Course-Taking Group",
+    x = "Course-Taking Group",
+    y = "Number of ML-Related Areas Selected"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
