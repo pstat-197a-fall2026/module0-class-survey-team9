@@ -1,0 +1,7 @@
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  n_ml_areas by course_group
+W = 107, p-value = 0.9319
+alternative hypothesis: true location shift is not equal to 0
+

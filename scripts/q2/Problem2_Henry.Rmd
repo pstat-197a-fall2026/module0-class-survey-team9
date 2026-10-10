@@ -16,8 +16,9 @@ library(tidyr)
 library(knitr)
 library(scales)
 
-fig_dir <- "results/q2/figures"
-table_dir <- "results/q2/tables"
+fig_dir <- "../../results/q2/figures"
+table_dir <- "../../results/q2/tables"
+
 
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
