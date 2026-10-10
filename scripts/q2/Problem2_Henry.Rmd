@@ -7,11 +7,37 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 library(readr)
 library(dplyr)
 library(stringr)
 library(ggplot2)
 library(tidyr)
+library(knitr)
+library(scales)
+
+fig_dir <- "results/q2/figures"
+table_dir <- "results/q2/tables"
+
+dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
+
+save_table <- function(data, filename) {
+  write.csv(
+    data,
+    file.path(table_dir, filename),
+    row.names = FALSE
+  )
+}
+
+ml_areas <- c(
+  "Analysis or classification of images",
+  "Deep learning and neural networks",
+  "Data acquisition and engineering",
+  "Natural language processing and analysis of text",
+  "Predictive modeling, generally",
+  "Statistical models and inference, generally"
+)
 ```
 
 # Do students who have taken both 131 and 134 report greater interest in machine-learning-related fields than students who have taken 131 only?
@@ -28,7 +54,7 @@ head(problem2)
 
 We have already joined the two datasets (**background-clean.csv** and **interest-clean.csv**) by `response_id`. We can see that there are 49 responders who consented to sharing both reponses. While there are 15 columns, we will mainly be using `courses` and `areas`.
 
-### Data Validation
+## Data Validation
 
 We are assuming that students who have taken PSTAT 134 have also taken PSTAT 131 since it is a prerequisite to that course. We checked this assumption by ensuring that every student who listed PSTAT 134 also included PSTAT 131.
 
@@ -70,12 +96,12 @@ ml_areas <- c(
 
 Again, this part is subjective since most of the options can be interpreted to fit into the scope of machine learning. However, we only chose six out of the eleven topics to provide an adequate representation of what is closest to machine learning.
 
-### PSTAT 131 vs non-PSTAT 131
+## PSTAT 131 vs non-PSTAT 131
 
 To begin, we will explore students who have taken PSTAT 131 and students who have not taken PSTAT 131.
 
 ```{r}
-problem2 %>%
+enrollment_table <- problem2 %>%
   mutate(
     course_group = if_else(
       str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
@@ -86,16 +112,20 @@ problem2 %>%
   count(course_group, name = "Number of Students") %>%
   mutate(
     Proportion = `Number of Students` / sum(`Number of Students`)
-  ) %>%
-  knitr::kable(
-    col.names = c(
-      "PSTAT 131 Enrollment",
-      "Number of Students",
-      "Proportion"
-    ),
-    digits = 3,
-    caption = "Students by PSTAT 131 Enrollment"
   )
+
+save_table(enrollment_table, "pstat131_enrollment.csv")
+
+kable(
+  enrollment_table,
+  col.names = c(
+    "PSTAT 131 Enrollment",
+    "Number of Students",
+    "Proportion"
+  ),
+  digits = 3,
+  caption = "Students by PSTAT 131 Enrollment"
+)
 ```
 
 Here, we can see that only 5 students have not taken PSTAT 131, totaling around 10% of the respondents. On the other hand, 90% of students have taken PSTAT 131 at 44 students.
@@ -109,8 +139,8 @@ ml_data <- problem2 %>%
     ),
     areas = coalesce(areas, "")
   ) %>%
-  separate_rows(areas, sep = ",\\s*") %>%
-  mutate(selected = areas %in% ml_areas) %>%
+  crossing(area = ml_areas) %>%
+  mutate(selected = str_detect(areas, fixed(area))) %>%
   group_by(response_id, took_131) %>%
   summarise(
     n_ml_areas = sum(selected),
@@ -127,8 +157,10 @@ ml_data <- problem2 %>%
 ml_data
 ```
 
+Now we have added another component: the number of machine learning area interests each student selected. We have printed out the raw table to see this addition.
+
 ```{r}
-ml_data %>%
+ml_summary <- ml_data %>%
   group_by(course_group) %>%
   summarise(
     n = n(),
@@ -136,13 +168,23 @@ ml_data %>%
     median_ml_areas = median(n_ml_areas),
     .groups = "drop"
   )
+
+save_table(ml_summary, "ml_interest_summary_by_pstat131.csv")
+
+kable(
+  ml_summary,
+  digits = 3,
+  caption = "ML-Related Interests by PSTAT 131 Enrollment"
+)
 ```
 
-Here we have a contingency
+Here we have summary statistics for students who have taken PSTAT 131 vs students who have not taken PSTAT 131. The mean and median number of machine learning areas are shown. The mean is larger for students who took PSTAT 131, while the median is larger for students who have not taken PSTAT 131.
 
 ```{r}
-ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
-                    fill = course_group)) +
+boxplot_131 <- ggplot(
+  ml_data,
+  aes(x = course_group, y = n_ml_areas, fill = course_group)
+) +
   geom_boxplot() +
   labs(
     title = "ML-Related Interests by PSTAT 131 Enrollment",
@@ -151,54 +193,130 @@ ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+
+boxplot_131
+
+ggsave(
+  file.path(fig_dir, "ml_interests_boxplot.png"),
+  plot = boxplot_131,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+```
+
+Here we have a boxplot showing the distributions of each cohort. It appears that students who have not taken PSTAT 131 have a larger range, since there are only 5 students.
+
+```{r}
+area_proportions <- problem2 %>%
+  mutate(
+    took_131 = str_detect(
+      coalesce(courses, ""),
+      "\\bPSTAT 131\\b"
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  select(response_id, took_131, areas) %>%
+  crossing(area = ml_areas) %>%
+  mutate(
+    selected = str_detect(areas, fixed(area)),
+    course_group = if_else(
+      took_131,
+      "Took PSTAT 131",
+      "Did not take PSTAT 131"
+    )
+  ) %>%
+  group_by(course_group, area) %>%
+  summarise(
+    n_selected = sum(selected),
+    n_students = n_distinct(response_id),
+    proportion = n_selected / n_students,
+    .groups = "drop"
+  )
+
+save_table(
+  area_proportions,
+  "ml_area_proportions_by_pstat131.csv"
+)
+
+area_chart <- ggplot(
+  area_proportions,
+  aes(x = area, y = proportion, fill = course_group)
+) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(
+    labels = percent_format(),
+    limits = c(0, 1)
+  ) +
+  labs(
+    title = "ML-Related Interests by PSTAT 131 Enrollment",
+    x = "Machine Learning Interest Area",
+    y = "Proportion of Students Within Each Group",
+    fill = "PSTAT 131 Enrollment"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+area_chart
+
+ggsave(
+  file.path(fig_dir, "ml_area_proportions.png"),
+  plot = area_chart,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
 ```
 
 ```{r}
-wilcox.test(
+wilcox_result <- wilcox.test(
   n_ml_areas ~ course_group,
   data = ml_data,
   exact = FALSE
 )
+
+capture.output(
+  wilcox_result,
+  file = file.path(table_dir, "wilcoxon_test.txt")
+)
+
+wilcox_result
 ```
 
-### Both PSTAT 131 and PSTAT 134 vs Only PSTAT 131
+## Both PSTAT 131 and PSTAT 134 vs Only PSTAT 131
 
 ```{r}
-ml_data <- problem2 %>%
-  mutate(
-    took_131 = str_detect(courses, "\\bPSTAT 131\\b"),
-    took_134 = str_detect(courses, "\\bPSTAT 134\\b"),
-    course_group = case_when(
-      took_131 & took_134 ~ "Both courses",
-      took_131 & !took_134 ~ "PSTAT 131 only",
-      TRUE ~ NA_character_
-    ),
-    areas = coalesce(areas, "")
-  ) %>%
-  filter(!is.na(course_group)) %>%
-  separate_rows(areas, sep = ",\\s*") %>%
-  mutate(selected = areas %in% ml_areas) %>%
-  group_by(response_id, course_group) %>%
-  summarise(
-    n_ml_areas = sum(selected),
-    .groups = "drop"
-  )
-```
-
-```{r}
-ml_data %>%
+comparison_summary <- ml_data %>%
   group_by(course_group) %>%
   summarise(
     n = n(),
-    mean_domains = mean(n_ml_areas),
-    median_domains = median(n_ml_areas),
+    mean_ml_areas = mean(n_ml_areas),
+    median_ml_areas = median(n_ml_areas),
     .groups = "drop"
   )
+
+save_table(
+  comparison_summary,
+  "ml_interest_summary_131_vs_131_134.csv"
+)
+
+kable(
+  comparison_summary,
+  digits = 3,
+  caption = "ML Interests: PSTAT 131 Only vs Both Courses"
+)
 ```
 
 ```{r}
-ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
-                    fill = course_group)) +
+comparison_boxplot <- ggplot(
+  ml_data,
+  aes(x = course_group, y = n_ml_areas, fill = course_group)
+) +
   geom_boxplot() +
   labs(
     title = "ML-Related Interests by Course-Taking Group",
@@ -207,8 +325,18 @@ ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+
+comparison_boxplot
+
+ggsave(
+  file.path(fig_dir, "ml_interests_131_vs_131_134.png"),
+  plot = comparison_boxplot,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
 ```
 
-### Drawbacks
+## Drawbacks
 
 Some drawbacks about this research question is that the survey allowed the respondent as many choices they wanted for area interests. In other words, someone could have checked all the boxes and make the cohorts even harder to determine. Ideally, we would have each person only selected one topic they are most interested in.
