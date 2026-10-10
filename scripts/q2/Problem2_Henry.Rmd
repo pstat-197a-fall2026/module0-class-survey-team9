@@ -1,7 +1,8 @@
 ---
-title: "Problem 2 (Henry)"
+title: "Question 2 (Henry)"
 date: "2026-10-09"
-output: html_document
+output:
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -13,21 +14,23 @@ library(ggplot2)
 library(tidyr)
 ```
 
-# Problem 2
+# Do students who have taken both 131 and 134 report greater interest in machine-learning-related fields than students who have taken 131 only?
 
-## Do students who have taken both 131 and 134 report greater interest in machine-learning-related fields than students who have taken 131 only?
-
-We want to see if taking only PSTAT 131 has any correlation in machine learning domain interests.
+Our second question surrounds the association between taking certain PSTAT courses and having specific areas of interest. Specifically, we want to see if taking PSTAT 131 and/or PSTAT 134 has any correlation in machine learning domain interests. We chose the 131/134 courses because its course description fits the topic of machine learning and its techniques pretty well. It is a course that is well known in the PSTAT department, and with the ongoing advancements in artificial intelligence and machine learning, we only feel that the latter is worth exploring through our survey data.
 
 ```{r}
-problem2 <- read_csv("~/Desktop/PSTAT197A/module0-class-survey-team9/data/problem2.csv")
+problem2 <- read_csv("~/Desktop/PSTAT197A/module0-class-survey-team9/data/processed/q2/problem2.csv")
 
 dim(problem2)
 
 head(problem2)
 ```
 
-We are assuming that students who have taken PSTAT 134 have also taken PSTAT 131 since it is a prerequisite to that course. We confirmed this step by checking that every student who listed PSTAT 134 also included PSTAT 131.
+We have already joined the two datasets (**background-clean.csv** and **interest-clean.csv**) by `response_id`. We can see that there are 49 responders who consented to sharing both reponses. While there are 15 columns, we will mainly be using `courses` and `areas`.
+
+### Data Validation
+
+We are assuming that students who have taken PSTAT 134 have also taken PSTAT 131 since it is a prerequisite to that course. We checked this assumption by ensuring that every student who listed PSTAT 134 also included PSTAT 131.
 
 ```{r}
 course_check <- problem2 %>%
@@ -42,7 +45,9 @@ course_check %>%
   select(response_id, courses)
 ```
 
-Let's see the potential options for area interests:
+Since there are no students who took PSTAT 134, but not PSTAT 131, our data is valid.
+
+Now let's see the potential options for area interests:
 
 ```{r}
 possible_values <- unique(unlist(strsplit(as.character(problem2$areas), split = ",")))
@@ -50,7 +55,7 @@ possible_values <- unique(unlist(strsplit(as.character(problem2$areas), split = 
 possible_values
 ```
 
-Out of the eleven options, we will define 'machine learning' interests as one of the following six options:
+Out of the eleven options (not counting spacing discrepancies), we will define 'machine learning' interests as one of the following six options:
 
 ```{r}
 ml_areas <- c(
@@ -63,7 +68,37 @@ ml_areas <- c(
 )
 ```
 
+Again, this part is subjective since most of the options can be interpreted to fit into the scope of machine learning. However, we only chose six out of the eleven topics to provide an adequate representation of what is closest to machine learning.
+
 ### PSTAT 131 vs non-PSTAT 131
+
+To begin, we will explore students who have taken PSTAT 131 and students who have not taken PSTAT 131.
+
+```{r}
+problem2 %>%
+  mutate(
+    course_group = if_else(
+      str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+      "Took PSTAT 131",
+      "Did not take PSTAT 131"
+    )
+  ) %>%
+  count(course_group, name = "Number of Students") %>%
+  mutate(
+    Proportion = `Number of Students` / sum(`Number of Students`)
+  ) %>%
+  knitr::kable(
+    col.names = c(
+      "PSTAT 131 Enrollment",
+      "Number of Students",
+      "Proportion"
+    ),
+    digits = 3,
+    caption = "Students by PSTAT 131 Enrollment"
+  )
+```
+
+Here, we can see that only 5 students have not taken PSTAT 131, totaling around 10% of the respondents. On the other hand, 90% of students have taken PSTAT 131 at 44 students.
 
 ```{r}
 ml_data <- problem2 %>%
@@ -88,6 +123,8 @@ ml_data <- problem2 %>%
       "Did not take PSTAT 131"
     )
   )
+
+ml_data
 ```
 
 ```{r}
@@ -100,6 +137,8 @@ ml_data %>%
     .groups = "drop"
   )
 ```
+
+Here we have a contingency
 
 ```{r}
 ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
@@ -169,3 +208,7 @@ ggplot(ml_data, aes(x = course_group, y = n_ml_areas,
   theme_minimal() +
   theme(legend.position = "none")
 ```
+
+### Drawbacks
+
+Some drawbacks about this research question is that the survey allowed the respondent as many choices they wanted for area interests. In other words, someone could have checked all the boxes and make the cohorts even harder to determine. Ideally, we would have each person only selected one topic they are most interested in.
