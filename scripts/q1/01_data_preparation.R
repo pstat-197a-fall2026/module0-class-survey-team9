@@ -4,7 +4,7 @@ library(stringr)
 library(tibble)
 
 # Load survey data and check IDs and missing values
-background <- read.csv('data/background-clean-final-for-problem-1.csv',
+background <- read.csv('data/processed/q1/background-clean-final-for-problem-1.csv',
                        check.names = FALSE, stringsAsFactors = FALSE) %>%
   as_tibble()
 required <- c('response_id', 'courses', 'pstat_class_count', 'stat.comf')
@@ -18,7 +18,7 @@ print(background %>% summarise(across(all_of(required), ~ sum(is.na(.x)))))
 message('Missing or blank course lists: ', sum(missing_courses))
 
 # Validate statistics comfort against the documented metadata categories
-metadata <- read.csv('data/survey-metadata.csv', stringsAsFactors = FALSE)
+metadata <- read.csv('data/raw/survey-metadata.csv', stringsAsFactors = FALSE)
 comfort_notes <- metadata$values.notes[metadata$variable.name == 'stat.comf']
 # Metadata reports observed categories, not explicit questionnaire bounds.
 stopifnot(length(comfort_notes) == 1,
