@@ -1,0 +1,63 @@
+---
+title: "Ordinal Logistic Regression"
+author: "Erika Nares"
+date: "2026-10-09"
+output: html_document
+---
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(tidyverse)
+library(ordinal)
+library(broom)
+```
+
+```{r}
+data <- read.csv('data/processed/q1/q1-analysis.csv') %>% as_tibble()
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+model_data <- data %>%
+  select(n_ud_pstat, stat_comfort) %>%
+  drop_na() %>%
+  mutate(
+    # Treat comfort as an ordered categorical outcome
+    stat_comfort = ordered(
+      stat_comfort,
+      levels = 1:5
+    )
+  )
+glimpse(model_data)
+
+```
+
+```{r}
+table(model_data$stat_comfort)
+
+```
+
+```{r}
+table(model_data$n_ud_pstat)
+```
+
+```{r}
+ordinal_fit <- clm(
+  stat_comfort ~ n_ud_pstat,
+  data = model_data,
+  link = "logit"
+)
+```
+
+```{r}
+summary(ordinal_fit)
+
+```
+
+
