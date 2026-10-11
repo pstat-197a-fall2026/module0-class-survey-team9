@@ -134,25 +134,22 @@ Here, we can see that only 5 students have not taken PSTAT 131, totaling around 
 ```{r}
 ml_data <- problem2 %>%
   mutate(
-    took_131 = str_detect(
-      coalesce(courses, ""),
-      "\\bPSTAT 131\\b"
+    took_131 = str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+    took_134 = str_detect(coalesce(courses, ""), "\\bPSTAT 134\\b"),
+    course_group = case_when(
+      took_131 & took_134 ~ "Both courses",
+      took_131 & !took_134 ~ "PSTAT 131 only",
+      TRUE ~ NA_character_
     ),
     areas = coalesce(areas, "")
   ) %>%
+  filter(!is.na(course_group)) %>%
   crossing(area = ml_areas) %>%
   mutate(selected = str_detect(areas, fixed(area))) %>%
-  group_by(response_id, took_131) %>%
+  group_by(response_id, course_group) %>%
   summarise(
     n_ml_areas = sum(selected),
     .groups = "drop"
-  ) %>%
-  mutate(
-    course_group = if_else(
-      took_131,
-      "Took PSTAT 131",
-      "Did not take PSTAT 131"
-    )
   )
 
 ml_data
@@ -274,6 +271,8 @@ ggsave(
 )
 ```
 
+We can see that 'Deep learning and neural networks' has the biggest gap in proportion of students who find interest in that topic.
+
 ```{r}
 wilcox_result <- wilcox.test(
   n_ml_areas ~ course_group,
@@ -289,7 +288,7 @@ capture.output(
 wilcox_result
 ```
 
-## Both PSTAT 131 and PSTAT 134 vs Only PSTAT 131
+## PSTAT 134 vs PSTAT 131
 
 ```{r}
 comparison_summary <- ml_data %>%
@@ -334,6 +333,68 @@ ggsave(
   plot = comparison_boxplot,
   width = 8,
   height = 5,
+  dpi = 300
+)
+```
+
+```{r}
+comparison_proportions <- problem2 %>%
+  mutate(
+    took_131 = str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+    took_134 = str_detect(coalesce(courses, ""), "\\bPSTAT 134\\b"),
+    course_group = case_when(
+      took_131 & took_134 ~ "Both courses",
+      took_131 & !took_134 ~ "PSTAT 131 only",
+      TRUE ~ NA_character_
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  filter(!is.na(course_group)) %>%
+  crossing(area = ml_areas) %>%
+  mutate(selected = str_detect(areas, fixed(area))) %>%
+  group_by(course_group, area) %>%
+  summarise(
+    n_selected = sum(selected),
+    n_students = n_distinct(response_id),
+    proportion = n_selected / n_students,
+    .groups = "drop"
+  )
+
+save_table(
+  comparison_proportions,
+  "ml_area_proportions_131_vs_131_134.csv"
+)
+
+comparison_chart <- ggplot(
+  comparison_proportions,
+  aes(x = area, y = proportion, fill = course_group)
+) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(
+    labels = scales::percent_format(),
+    limits = c(0, 1)
+  ) +
+  labs(
+    title = "ML-Related Interests by PSTAT Course Enrollment",
+    x = "Machine Learning Interest Area",
+    y = "Proportion of Students Within Each Group",
+    fill = "Course Group"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+comparison_chart
+
+ggsave(
+  file.path(fig_dir, "ml_area_proportions_131_vs_131_134.png"),
+  plot = comparison_chart,
+  width = 11,
+  height = 7,
   dpi = 300
 )
 ```
