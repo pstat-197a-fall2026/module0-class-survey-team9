@@ -194,7 +194,7 @@ boxplot_131 <- ggplot(
 boxplot_131
 
 ggsave(
-  file.path(fig_dir, "ml_interests_boxplot.png"),
+  file.path(fig_dir, "fig_1_ml_interests_boxplot.png"),
   plot = boxplot_131,
   width = 8,
   height = 5,
@@ -262,7 +262,7 @@ area_chart <- ggplot(
 area_chart
 
 ggsave(
-  file.path(fig_dir, "ml_area_proportions.png"),
+  file.path(fig_dir, "fig_2_ml_area_proportions.png"),
   plot = area_chart,
   width = 11,
   height = 7,
@@ -334,7 +334,7 @@ comparison_boxplot <- ggplot(
 comparison_boxplot
 
 ggsave(
-  file.path(fig_dir, "ml_interests_131_vs_131_134.png"),
+  file.path(fig_dir, "fig_3_ml_interests_131_vs_131_134.png"),
   plot = comparison_boxplot,
   width = 8,
   height = 5,
@@ -398,7 +398,7 @@ comparison_chart <- ggplot(
 comparison_chart
 
 ggsave(
-  file.path(fig_dir, "ml_area_proportions_131_vs_131_134.png"),
+  file.path(fig_dir, "fig_4_ml_area_proportions_131_vs_131_134.png"),
   plot = comparison_chart,
   width = 11,
   height = 7,
