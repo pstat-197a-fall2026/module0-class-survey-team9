@@ -19,8 +19,8 @@ library(tidyverse)
 library(here)
 library(knitr)
 
-background <- read_csv(here('data', 'background-clean.csv'))
-interest   <- read_csv(here('data', 'interest-clean.csv'))
+background <- read_csv(here('data', 'raw', 'background-clean.csv'))
+interest   <- read_csv(here('data', 'raw', 'interest-clean.csv'))
 joined     <- inner_join(background, interest, by = 'response_id')
 
 ml_areas <- c(
