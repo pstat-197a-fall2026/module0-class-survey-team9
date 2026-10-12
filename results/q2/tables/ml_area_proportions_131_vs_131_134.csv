@@ -1,0 +1,13 @@
+"course_group","area","n_selected","n_students","proportion"
+"Both courses","Analysis or classification of images",6,13,0.461538461538462
+"Both courses","Data acquisition and engineering",10,13,0.769230769230769
+"Both courses","Deep learning and neural networks",11,13,0.846153846153846
+"Both courses","Natural language processing and analysis of text",6,13,0.461538461538462
+"Both courses","Predictive modeling, generally",11,13,0.846153846153846
+"Both courses","Statistical models and inference, generally",6,13,0.461538461538462
+"PSTAT 131 only","Analysis or classification of images",18,31,0.580645161290323
+"PSTAT 131 only","Data acquisition and engineering",17,31,0.548387096774194
+"PSTAT 131 only","Deep learning and neural networks",26,31,0.838709677419355
+"PSTAT 131 only","Natural language processing and analysis of text",16,31,0.516129032258065
+"PSTAT 131 only","Predictive modeling, generally",28,31,0.903225806451613
+"PSTAT 131 only","Statistical models and inference, generally",21,31,0.67741935483871

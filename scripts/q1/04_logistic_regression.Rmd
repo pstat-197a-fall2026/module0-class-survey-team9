@@ -1,0 +1,93 @@
+---
+title: "Question 1 Modelling "
+author: "Erika Nares"
+date: "2026-10-09"
+output: html_document
+---
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(tidyverse)
+library(ordinal)
+library(broom)
+library(mgcv)
+```
+
+```{r}
+data <- read.csv('../../data/processed/q1/q1-analysis.csv') %>% as_tibble()
+```
+
+```{r}
+head(data)
+```
+
+# Model 1: Ordinal Logistic Regression Model (assumes strict linear relationship)
+
+```{r}
+model_data <- data %>%
+  select(n_ud_pstat, stat_comfort) %>%
+  drop_na() %>%
+  mutate(
+    # Treat comfort as an ordered categorical outcome
+    stat_comfort = ordered(
+      stat_comfort,
+      levels = 1:5
+    )
+  )
+glimpse(model_data)
+
+```
+
+```{r}
+table(model_data$stat_comfort)
+
+```
+
+```{r}
+table(model_data$n_ud_pstat)
+```
+
+```{r}
+ordinal_fit <- clm(
+  stat_comfort ~ n_ud_pstat,
+  data = model_data,
+  link = "logit"
+)
+```
+
+```{r}
+summary(ordinal_fit)
+
+```
+Interpretation: 
+Large P-value assumes that there is not a stastically significant relationship between the two variables. 
+
+# Model 2: GAM (Assumes flexible, non-linear relationship)
+
+```{r}
+model_data$stat_comfort_int <- as.integer(as.character(model_data$stat_comfort))
+
+# Fit the ordinal GAM
+gam_fit <- gam(
+  stat_comfort_int ~ s(n_ud_pstat, k = 3), 
+  family = ocat(R = 5), 
+  data = model_data
+)
+
+summary(gam_fit)
+```
+Interpretation: 
+Large F-value assumes that there is not a stastically significant relationship between the two variables. Because the GAM model is more flexible, it is doing a better job at fitting the data compared to the first model, but the result is still not statistically significant. The model explains 5.64% of the deviance. 
+
+# Correlation Matrix
+
+```{r}
+cor.test(model_data$n_ud_pstat, as.numeric(model_data$stat_comfort), method = "spearman")
+```
+With a correlation coefficient close to zero and a high p-value, the Spearman test shows little to no relationship between the two variables. 
+
+
+
