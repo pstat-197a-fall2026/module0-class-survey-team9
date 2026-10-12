@@ -2,7 +2,10 @@
 title: 'Q2: 131 + 134 Group'
 author: "Khoi Huynh"
 date: "2026-10-09"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+---git
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # PSTAT 134 vs. non-PSTAT134
-
 
 ## Loading Data and Defining the ML Areas
 
@@ -55,6 +57,7 @@ q134 |>
 From this table, we can see that PSTAT 134 (Statistical Data Science) is not a commonly taken course among the students in our sample. Only 13 of the 49 respondents (26.5%) reported taking PSTAT 134, while 36 (73.5%) had not. This is a sharp contrast with PSTAT 131, which 44 of the 49 students (89.8%) had taken. Since PSTAT 131 is a prerequisite for PSTAT 134, most students have completed the introductory machine learning course but relatively few continued on to 134, leading to a unbalanced comparison.
 
 ## Measuring ML Interest for Each Student
+
 Each student could select any number of the eleven interest areas, so we need a single measure of how interested each student is in machine learning. To do this, we can check which of our six ML areas each student selected and count them, giving every student an ML interest score from 0 to 6. This allows us to compare both groups on the scale!
 
 ```{r}
@@ -87,9 +90,11 @@ ml_data_134 |>
   kable(digits = 2, caption = 'Number of ML-related areas selected, by PSTAT 134 enrollment')
   
 ```
+
 Students who did not take PSTAT 134 selected slightly more ML related areas on average (4.00) than those who took PSTAT 134 (3.85), although both groups share the same median of 4. Something to note is that students who did not take PSTAT 134 also had a wider range (1 to 6 areas) than those who took it to (2 to 5 areas), likely because that group is nearly three times larger. In all, we can see that the two groups show very similar levels of ML interest, suggesting that taking PSTAT 134 is not really associated with selecting more ML related areas.
 
 ## Distribution of ML Interest by Group
+
 While the summary table gives us averages, it does not show how the scores are spread out within each group. A boxplot lets us compare the middle and range of ML interest scores side by side, and adding the individual points shows each student, which is especially helpful since the PSTAT 134 group only has 13 students.
 
 ```{r}
@@ -102,6 +107,7 @@ ggplot(ml_data_134, aes(x = group_134, y = n_ml_areas, fill = group_134)) +
   theme(legend.position = 'none')
 
 ```
+
 The boxplots for both groups look nearly identical: each has a median of 4 ML areas, and the middle 50% of students in both groups selected between 3 and 5 areas. The main difference is in the range, since students who did not take PSTAT 134 spread from 1 to 6 areas, while those who took PSTAT 134 stayed between 2 and 5. Overall, the plot supports our summary table, showing that the two groups have very similar distributions of ML interest.
 
 ## ML Interest by Area
@@ -132,25 +138,10 @@ ggplot(area_props_134, aes(x = area, y = proportion, fill = group_134)) +
 
 (finish analysis tomorrow, start working on 134 + 131 group + add visuals links)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## 131 + 134 Group (WORK ON LATER)
 
 # filter to students who took both 131 and 134
+
 ```{r}
 q2_134 <- joined %>%
   filter(str_detect(courses, fixed('PSTAT 131')),
@@ -159,6 +150,7 @@ nrow(q2_134)
 ```
 
 # flagging ml areas
+
 ```{r}
 q2_134 <- q2_134 |>
   mutate(
@@ -191,6 +183,7 @@ q2_134 |>
 ```
 
 # Plot
+
 ```{r}
 q2_134 |>
   summarise(`Deep learning` = mean(deep_learning),
@@ -208,4 +201,5 @@ q2_134 |>
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 ```
+
 So out of the 13 students who took 131 and 145, the interest was highest in deep learning and predictive modeling (both having like 85%?).
