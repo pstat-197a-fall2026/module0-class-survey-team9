@@ -136,7 +136,7 @@ ggplot(area_props_134, aes(x = area, y = proportion, fill = group_134)) +
   theme(axis.text.x = element_text(angle = 35, hjust = 1))
 ```
 
-(finish analysis tomorrow, start working on 134 + 131 group + add visuals links)
+(finish analysis tomorrow, start working on 134 + 131 group + add visuals links
 
 ## 131 + 134 Group (WORK ON LATER)
 
