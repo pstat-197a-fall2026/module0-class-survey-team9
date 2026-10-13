@@ -7,24 +7,621 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(scales)
+
+fig_dir <- "../../results/q2/figures"
+table_dir <- "../../results/q2/tables"
+
+dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
+
+save_table <- function(data, filename) {
+  write.csv(
+    data,
+    file.path(table_dir, filename),
+    row.names = FALSE
+  )
+}
 ```
 
-## R Markdown
+# Do students who have taken both 131 and 134 report greater interest in machine-learning-related fields than students who have taken 131 only?
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Our second question surrounds the association between taking certain PSTAT courses and having specific areas of interest. Specifically, we want to see if taking PSTAT 131 and/or PSTAT 134 has any correlation in machine learning domain interests. We chose the 131/134 courses because its course description fits the topic of machine learning and its techniques pretty well. It is a course that is well known in the PSTAT department, and with the ongoing advancements in artificial intelligence and machine learning, we only feel that the latter is worth exploring through our survey data.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+problem2 <- read_csv("~/Desktop/PSTAT197A/module0-class-survey-team9/data/processed/q2/problem2.csv")
 
-```{r cars}
-summary(cars)
+dim(problem2)
+
+head(problem2)
 ```
 
-## Including Plots
+We have already joined the two datasets (**background-clean.csv** and **interest-clean.csv**) by `response_id`. We can see that there are 49 respondents who consented to sharing both responses. While there are 15 columns, we will mainly be using `courses` and `areas`.
 
-You can also embed plots, for example:
+## Data Validation
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+We are assuming that students who have taken PSTAT 134 have also taken PSTAT 131 since it is a prerequisite to that course. We checked this assumption by ensuring that every student who listed PSTAT 134 also included PSTAT 131.
+
+```{r}
+course_check <- problem2 %>%
+  mutate(
+    took_131 = str_detect(courses, "\\bPSTAT 131\\b"),
+    took_134 = str_detect(courses, "\\bPSTAT 134\\b")
+  )
+
+# Show everyone who took PSTAT 134 but not PSTAT 131
+course_check %>%
+  filter(took_134 & !took_131) %>%
+  select(response_id, courses)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Since there are no students who took PSTAT 134, but not PSTAT 131, our data is valid.
+
+Now let's see the potential options for area interests:
+
+```{r}
+possible_values <- unique(unlist(strsplit(as.character(problem2$areas), split = ",")))
+
+possible_values
+```
+
+Out of the eleven options (not counting spacing discrepancies), we will define 'machine learning' interests as one of the following six options:
+
+```{r}
+ml_areas <- c(
+  "Analysis or classification of images",
+  "Deep learning and neural networks",
+  "Data acquisition and engineering",
+  "Natural language processing and analysis of text",
+  "Predictive modeling, generally",
+  "Statistical models and inference, generally"
+)
+```
+
+Again, this part is subjective since most of the options can be interpreted to fit into the scope of machine learning. However, we only chose six out of the eleven topics to provide an adequate representation of what is closest to machine learning.
+
+We chose these six areas because they were the most closely related to machine learning. Students were able to select from eleven areas of interest, and most of them can be argued to connect to ML in some way. However, this selection focuses primarily on areas involving building, training, or applying predictive models, or preparing the data those models rely on. We recognize that this choice of selection is somewhat subjective and that a different selection could lead to slightly different results.
+
+## PSTAT 131 vs non-PSTAT 131
+
+To begin, we will explore students who have taken PSTAT 131 and students who have not taken PSTAT 131.
+
+```{r}
+enrollment_table <- problem2 %>%
+  mutate(
+    course_group = if_else(
+      str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+      "Took PSTAT 131",
+      "Did not take PSTAT 131"
+    )
+  ) %>%
+  count(course_group, name = "Number of Students") %>%
+  mutate(
+    Proportion = `Number of Students` / sum(`Number of Students`)
+  )
+
+save_table(enrollment_table, "pstat131_enrollment.csv")
+
+kable(
+  enrollment_table,
+  col.names = c(
+    "PSTAT 131 Enrollment",
+    "Number of Students",
+    "Proportion"
+  ),
+  digits = 3,
+  caption = "Students by PSTAT 131 Enrollment"
+)
+```
+
+Here, we can see that only 5 students have not taken PSTAT 131, totaling around 10% of the respondents. On the other hand, 90% of students have taken PSTAT 131 at 44 students.
+
+```{r}
+ml_data <- problem2 %>%
+  mutate(
+    took_131 = str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+    took_134 = str_detect(coalesce(courses, ""), "\\bPSTAT 134\\b"),
+    course_group = case_when(
+      took_131 & took_134 ~ "Both courses",
+      took_131 & !took_134 ~ "PSTAT 131 only",
+      TRUE ~ NA_character_
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  filter(!is.na(course_group)) %>%
+  crossing(area = ml_areas) %>%
+  mutate(selected = str_detect(areas, fixed(area))) %>%
+  group_by(response_id, course_group) %>%
+  summarise(
+    n_ml_areas = sum(selected),
+    .groups = "drop"
+  )
+
+ml_data
+```
+
+Now we have added another component: the number of machine learning area interests each student selected. We have printed out the raw table to see this addition.
+
+```{r}
+ml_summary <- ml_data %>%
+  group_by(course_group) %>%
+  summarise(
+    n = n(),
+    mean_ml_areas = mean(n_ml_areas),
+    median_ml_areas = median(n_ml_areas),
+    .groups = "drop"
+  )
+
+save_table(ml_summary, "ml_interest_summary_by_pstat131.csv")
+
+kable(
+  ml_summary,
+  digits = 3,
+  caption = "ML-Related Interests by PSTAT 131 Enrollment"
+)
+```
+
+Here we have summary statistics for students who have taken PSTAT 131 vs students who have not taken PSTAT 131. The mean and median number of machine learning areas are shown. The mean is larger for students who took PSTAT 131, while the median is larger for students who have not taken PSTAT 131.
+
+```{r}
+boxplot_131 <- ggplot(
+  ml_data,
+  aes(x = course_group, y = n_ml_areas, fill = course_group)
+) +
+  geom_boxplot() +
+  labs(
+    title = "ML-Related Interests by PSTAT 131 Enrollment",
+    x = "Course Group",
+    y = "Number of ML-Related Areas Selected"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+boxplot_131
+
+ggsave(
+  file.path(fig_dir, "fig_1_ml_interests_boxplot.png"),
+  plot = boxplot_131,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+```
+
+Here we have a boxplot showing the distributions of each cohort. It appears that students who have not taken PSTAT 131 have a larger range, since there are only 5 students.
+
+```{r}
+area_proportions <- problem2 %>%
+  mutate(
+    took_131 = str_detect(
+      coalesce(courses, ""),
+      "\\bPSTAT 131\\b"
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  select(response_id, took_131, areas) %>%
+  crossing(area = ml_areas) %>%
+  mutate(
+    selected = str_detect(areas, fixed(area)),
+    course_group = if_else(
+      took_131,
+      "Took PSTAT 131",
+      "Did not take PSTAT 131"
+    )
+  ) %>%
+  group_by(course_group, area) %>%
+  summarise(
+    n_selected = sum(selected),
+    n_students = n_distinct(response_id),
+    proportion = n_selected / n_students,
+    .groups = "drop"
+  )
+
+save_table(
+  area_proportions,
+  "ml_area_proportions_by_pstat131.csv"
+)
+
+area_chart <- ggplot(
+  area_proportions,
+  aes(x = area, y = proportion, fill = course_group)
+) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(
+    labels = percent_format(),
+    limits = c(0, 1)
+  ) +
+  labs(
+    title = "ML-Related Interests by PSTAT 131 Enrollment",
+    x = "Machine Learning Interest Area",
+    y = "Proportion of Students Within Each Group",
+    fill = "PSTAT 131 Enrollment"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+area_chart
+
+ggsave(
+  file.path(fig_dir, "fig_2_ml_area_proportions.png"),
+  plot = area_chart,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+```
+
+We can see that 'Deep learning and neural networks' has the biggest gap in proportion of students who find interest in that topic.
+
+```{r}
+wilcox_result <- wilcox.test(
+  n_ml_areas ~ course_group,
+  data = ml_data,
+  exact = FALSE
+)
+
+capture.output(
+  wilcox_result,
+  file = file.path(table_dir, "wilcoxon_test.txt")
+)
+
+wilcox_result
+```
+
+We conducted a nonparametric test (particularly the Wilcoxon rank sum test) since the group of students who haven't taken PSTAT 131 is fairly small, at 5 students. This test is used to determine whether two independent samples come from populations with the same distribution or median. Since the p-value is high enough, we fail to reject the null hypothesis and conclude that there is no difference in the number of machine learning interests between students who have or have not taken PSTAT 131.
+
+## PSTAT 134 vs. non-PSTAT134
+
+Something we can look at first is how many students in our sample have taken PSTAT 134 compared to those who have not. This tells us how large each group is before we compare their machine learning interests.
+
+```{r}
+q134 <- problem2 |>
+  mutate(group_134 = if_else(str_detect(courses, fixed('PSTAT 134')),
+                             'Took PSTAT 134', 'Did not take PSTAT 134'))
+
+q134 |>
+  count(group_134, name = 'n_students') |>
+  mutate(proportion = n_students / sum(n_students)) |>
+  kable(digits = 3, caption = 'Students by PSTAT 134 enrollment')
+```
+
+From this table, we can see that PSTAT 134 (Statistical Data Science) is not a commonly taken course among the students in our sample. Only 13 of the 49 respondents (26.5%) reported taking PSTAT 134, while 36 (73.5%) had not. This is a sharp contrast with PSTAT 131, which 44 of the 49 students (89.8%) had taken. Since PSTAT 131 is a prerequisite for PSTAT 134, most students have completed the introductory machine learning course but relatively few continued on to 134, leading to a unbalanced comparison.
+
+### Measuring ML Interest for Each Student
+
+Each student could select any number of the eleven interest areas, so we need a single measure of how interested each student is in machine learning. To do this, we can check which of our six ML areas each student selected and count them, giving every student an ML interest score from 0 to 6. This allows us to compare both groups on the scale!
+
+```{r}
+area_long_134 <- q134 |>
+  crossing(area = ml_areas) |>
+  mutate(selected = str_detect(areas, fixed(area)))
+
+ml_data_134 <- area_long_134 |>
+  group_by(response_id, group_134) |>
+  summarise(n_ml_areas = sum(selected), .groups = 'drop')
+
+head(ml_data_134)
+
+ml_data_134 |>
+  count(group_134, n_ml_areas) |>
+  pivot_wider(names_from = n_ml_areas, values_from = n, values_fill = 0) |>
+  kable(caption = 'Number of students by ML areas selected (out of 6)')
+```
+
+#### Summary
+
+```{r}
+ml_data_134 |>
+  group_by(group_134) |>
+  summarise(n = n(),
+            mean_ml_areas = mean(n_ml_areas),
+            median_ml_areas = median(n_ml_areas),
+            min = min(n_ml_areas),
+            max = max(n_ml_areas)) |>
+  kable(digits = 2, caption = 'Number of ML-related areas selected, by PSTAT 134 enrollment')
+```
+
+Students who did not take PSTAT 134 selected slightly more ML related areas on average (4.00) than those who took PSTAT 134 (3.85), although both groups share the same median of 4. Something to note is that students who did not take PSTAT 134 also had a wider range (1 to 6 areas) than those who took it to (2 to 5 areas), likely because that group is nearly three times larger. In all, we can see that the two groups show very similar levels of ML interest, suggesting that taking PSTAT 134 is not really associated with selecting more ML related areas.
+
+### Distribution of ML Interest by Group
+
+While the summary table gives us averages, it does not show how the scores are spread out within each group. A boxplot lets us compare the middle and range of ML interest scores side by side, and adding the individual points shows each student, which is especially helpful since the PSTAT 134 group only has 13 students.
+
+```{r}
+ggplot(ml_data_134, aes(x = group_134, y = n_ml_areas, fill = group_134)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, height = 0.1, alpha = 0.5) +
+  labs(title = "Number of ML related area selected, by PSTAT 134 enrollment",
+       x = NULL, y = 'Number of ML areas (out of 6)') +
+  theme_bw() +
+  theme(legend.position = 'none')
+```
+
+The boxplots for both groups look nearly identical: each has a median of 4 ML areas, and the middle 50% of students in both groups selected between 3 and 5 areas. The main difference is in the range, since students who did not take PSTAT 134 spread from 1 to 6 areas, while those who took PSTAT 134 stayed between 2 and 5. Overall, the plot supports our summary table, showing that the two groups have very similar distributions of ML interest.
+
+### ML Interest by Area
+
+So far we have only looked at the total number of ML areas each student selected, which can hide differences in which areas each group prefers. Next, we can break the interest down by individual area and compare the proportion of students in each group who selected it. This shows whether students who took PSTAT 134 lean toward certain ML topics more than others.
+
+```{r}
+area_props_134 <- area_long_134 |>
+  group_by(group_134, area) |>
+  summarise(n_selected = sum(selected),
+            n_students = n(),
+            proportion = n_selected / n_students,
+            .groups = 'drop')
+
+area_props_134 |>
+  select(area, group_134, proportion) |>
+  pivot_wider(names_from = group_134, values_from = proportion) |>
+  kable(digits = 3, caption = 'Proportion of students selecting each ML area, by PSTAT 134 enrollment')
+
+ggplot(area_props_134, aes(x = area, y = proportion, fill = group_134)) +
+  geom_col(position = 'dodge') +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(title = 'ML-related interests by PSTAT 134 enrollment',
+       x = NULL, y = 'Proportion of students in group', fill = NULL) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+When we broke the ML interest down by area, some differences show up that the overall totals didn't catch initially. Students who took PSTAT 134 were a lot more into data acquisition and engineering (76.9% vs. 52.8%) and a little into deep learning (84.6% vs. 77.8%). On the other other hand, they picked statistical inference (46.2% vs. 69.4%). image analysis (46.2 % vs. 58.3%), and NLP (46.2% vs. 52.8%) less often. Predictive modeling was the top pick for both groups, with around 88.9% of non-134 students and 84/6% of 134 students choosing it. From this we can say that PSTAT 134 students might lean more toward data engineering and away from traditional stats, but since there are only 13 of them, these differences could just be a random chance.
+
+### Testing for Differences
+
+The tables and plots show some difference between the two groups, but with only 13 students in the PSTAT 134 group, we should check whether these gaps are actually meaningful or could just be random noise. To check, we use Fisher's exact test for each area, since it works well with small groups, and a Wilcox on rank-sum test to compare the total number of ML areas picked, since those scores are counts rahter than normally distributed values.
+
+```{r}
+# Fisher's exact test
+
+area_long_134 |>
+  group_by(area) |>
+  summarise(took_134 = mean(selected[group_134 == 'Took PSTAT 134']),
+            not_134 = mean(selected[group_134 == 'Did not take PSTAT 134']),
+            p_value = fisher.test(table(group_134, selected))$p.value) |>
+  kable(digits = 3, caption = "Fisher's exact test by ML area")
+
+# Wiclxo rank sum test
+wilcox.test(n_ml_areas ~ group_134, 
+            data = ml_data_134, 
+            exact = FALSE)
+```
+
+From the Fisher's test, it seems like none of the six ML areas showed a statistically significant difference between the two groups, since every p value was well above 0.05. Even with the biggest gaps, like data engineering (p = 0.191) and statistical inference (p = 0.184), were not strong enough to rule out random chance. Additionally, the Wilcox rank sum test found no significant difference in the total of number of ML areas picked between the two groups (W = 249.5, p = 0.725). Meaning that students who took PSTAT 134 and those who didn't showed pretty much the same overall level of interest in machine learning.
+
+### Conclusion + Drawbacks
+
+There a few things to consider when looking at these results. First, the groups are pretty unbalanced, with only 13 students who took PSTAT 134 compared to 36 who didn't. That small group means one or two students can skew the percentage a lot, and our tests don't have much power to pick up a real difference. Second, the "did not take PSTAT 134" group isn't all the same, since it mixes 31 students who took PSTAT 131 with 5 who took neither course, so it isn't a clean comparison. The survey also let students pick as many areas as they wanted, our six ML areas was more a judgment call, also the data is self reported interest rather than actual skill, and since students choose their own courses, we cant determine that PSTAT 134 caused any differences.
+
+## PSTAT 134 vs PSTAT 131
+
+### Henry
+
+Now we will answer our initial question of whether taking PSTAT 131 or also taking PSTAT 134 has any correlation with the number of machine learning interests selected.
+
+```{r}
+comparison_summary <- ml_data %>%
+  group_by(course_group) %>%
+  summarise(
+    n = n(),
+    mean_ml_areas = mean(n_ml_areas),
+    median_ml_areas = median(n_ml_areas),
+    .groups = "drop"
+  )
+
+save_table(
+  comparison_summary,
+  "ml_interest_summary_131_vs_131_134.csv"
+)
+
+kable(
+  comparison_summary,
+  digits = 3,
+  caption = "ML Interests: PSTAT 131 Only vs Both Courses"
+)
+```
+
+Here we can see that the mean number of machine learning interests is slightly higher for PSTAT 131 only students (4.065) compared to students who also took PSTAT 134 (3.846). The median, however, is the same for both groups at 4.
+
+```{r}
+comparison_boxplot <- ggplot(
+  ml_data,
+  aes(x = course_group, y = n_ml_areas, fill = course_group)
+) +
+  geom_boxplot() +
+  labs(
+    title = "ML-Related Interests by Course-Taking Group",
+    x = "Course-Taking Group",
+    y = "Number of ML-Related Areas Selected"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+comparison_boxplot
+
+ggsave(
+  file.path(fig_dir, "fig_3_ml_interests_131_vs_131_134.png"),
+  plot = comparison_boxplot,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+```
+
+The distributions for both groups seem to be almost the same, with the only exception being students taking PSTAT 134 lacking an upper tail.
+
+```{r}
+comparison_proportions <- problem2 %>%
+  mutate(
+    took_131 = str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+    took_134 = str_detect(coalesce(courses, ""), "\\bPSTAT 134\\b"),
+    course_group = case_when(
+      took_131 & took_134 ~ "Both courses",
+      took_131 & !took_134 ~ "PSTAT 131 only",
+      TRUE ~ NA_character_
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  filter(!is.na(course_group)) %>%
+  crossing(area = ml_areas) %>%
+  mutate(selected = str_detect(areas, fixed(area))) %>%
+  group_by(course_group, area) %>%
+  summarise(
+    n_selected = sum(selected),
+    n_students = n_distinct(response_id),
+    proportion = n_selected / n_students,
+    .groups = "drop"
+  )
+
+save_table(
+  comparison_proportions,
+  "ml_area_proportions_131_vs_131_134.csv"
+)
+
+comparison_chart <- ggplot(
+  comparison_proportions,
+  aes(x = area, y = proportion, fill = course_group)
+) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(
+    labels = scales::percent_format(),
+    limits = c(0, 1)
+  ) +
+  labs(
+    title = "ML-Related Interests by PSTAT Course Enrollment",
+    x = "Machine Learning Interest Area",
+    y = "Proportion of Students Within Each Group",
+    fill = "Course Group"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+comparison_chart
+
+ggsave(
+  file.path(fig_dir, "fig_4_ml_area_proportions_131_vs_131_134.png"),
+  plot = comparison_chart,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+```
+
+Besides 'Data acquisition and engineering', it appears that students who only took PSTAT 131 have a higher probability of choosing the other 5 interests.
+
+```{r}
+# Separate the two groups
+both_courses <- ml_data %>%
+  filter(course_group == "Both courses") %>%
+  pull(n_ml_areas)
+
+pstat131_only <- ml_data %>%
+  filter(course_group == "PSTAT 131 only") %>%
+  pull(n_ml_areas)
+
+# One-sided Wilcoxon rank-sum test
+test_result <- wilcox.test(
+  both_courses,
+  pstat131_only,
+  alternative = "greater",
+  exact = FALSE
+)
+
+test_result
+```
+
+Again, we do not have convincing evidence that there is a difference in the number of machine learning interests between those who took PSTAT 131 and those who also took PSTAT 134.
+
+### Khoi
+
+One issue with the last comparison is that the "did not take PSTAT 134" group also included 5 students who never took PSTAT 131. To get a cleaner comparison, we can now just look at students who took PSTAT 131 and split them into those who stopped at 131 and those who went on to take 134 as well. This way, everone has the same intro ML background, and we can see whether taking 134 on top 131 makes a difference.
+
+### Filtering to PSTAT 131 students
+
+```{r}
+area_131 <- area_long_134 |>
+  filter(str_detect(courses, fixed('PSTAT 131'))) |>
+  mutate(cohort = if_else(group_134 == 'Took PSTAT 134', '131 + 134', '131 only'))
+  
+ml_131 <- area_131 |> 
+  group_by(response_id, cohort) |>
+  summarise(n_ml_areas = sum(selected), .groups = 'drop')
+
+ml_131 |>
+  count(cohort, name = 'n_students') |>
+  kable(caption = 'Students by cohort')
+  
+```
+
+This leaves us with 44 students, 31 who only took PSTAT 131 and 13 who took both.
+
+### Summary
+
+```{r}
+ml_131 |>
+  group_by(cohort) |>
+  summarise(n = n(),
+            mean_ml_areas = mean(n_ml_areas),
+            median_ml_areas = median(n_ml_areas)) |>
+  kable(digits = 2, caption = 'ML related areas selected: 131 only vs. 131 + 134')
+
+
+```
+
+Even after removing the 5 students who never took PSTAT 131, the results look almost the same as before. Students who took only 131 picked slightly more ML areas on average (4.06 vs. 3.85), and both groups had a median of 4.
+
+### ML Interest by Area
+
+```{r}
+area_131 |>
+  group_by(cohort, area) |>
+  summarise(proportion = mean(selected), .groups = 'drop') |>
+  ggplot(aes(x = area, y = proportion, fill = cohort)) +
+  geom_col(position = 'dodge') +
+  scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
+  labs(title = 'ML related interests: 131 only vs. 131 + 134',
+       x = NULL, y = 'Proportion of students in group', fill = NULL) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+
+```
+
+From this it looks like it follows the same pattern as before, with 131 + 134 students leaning more toward data engineering (77% vs. 55%) and less toward statistical inference (46% vs. 68%). The other areas were pretty similar between the two groups.
+
+### Testing for Differences
+
+Finally, we can check whether any of these differences are statistically signficant.
+
+```{r}
+area_131 |>
+  group_by(area) |>
+  summarise(p_value = fisher.test(table(cohort, selected))$p.value) |>
+  kable(digits = 3, caption = "Fisher's exact test by ML Area: 131 only vs. 131 + 134")
+
+wilcox.test(n_ml_areas ~ cohort, data = ml_131, exact = FALSE)
+```
+
+Just like before, none of the differences were statistically signficant. Every Fisher p value was above 0.05 (the closest being dqta engineering at p = 0.198), and the Wilcox test showed no real differences in the total number of ML areas picked (W = 186, p = 0.689). So, among students who already took PSTAT 131, also taking PSTAT 134 does not seem to be linked to more interst in machine learning.
+
+## Drawbacks
+
+Some drawbacks about this research question is that the survey allowed the respondent as many choices they wanted for area interests. In other words, someone could have checked all the boxes and make the cohorts even harder to determine. Ideally, we would have each person only selected one topic they are most interested in.
+
+Also, since there were multiple questions on the survey, with the interest question being near the end, many students may have felt fatigued and not thinking as deep for their true answers.
