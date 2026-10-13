@@ -1,1 +1,0 @@
-# This is where I will do my interpretation report / result findings for Q1. - Elijah
