@@ -36,7 +36,7 @@ save_table <- function(data, filename) {
 Our second question surrounds the association between taking certain PSTAT courses and having specific areas of interest. Specifically, we want to see if taking PSTAT 131 and/or PSTAT 134 has any correlation in machine learning domain interests. We chose the 131/134 courses because its course description fits the topic of machine learning and its techniques pretty well. It is a course that is well known in the PSTAT department, and with the ongoing advancements in artificial intelligence and machine learning, we only feel that the latter is worth exploring through our survey data.
 
 ```{r}
-problem2 <- read_csv("~/Desktop/PSTAT197A/module0-class-survey-team9/data/processed/q2/problem2.csv")
+problem2 <- read_csv(here::here("data", "processed", "q2", "problem2.csv"))
 
 dim(problem2)
 
@@ -586,6 +586,27 @@ ml_131 |>
 ```
 
 Even after removing the 5 students who never took PSTAT 131, the results look almost the same as before. Students who took only 131 picked slightly more ML areas on average (4.06 vs. 3.85), and both groups had a median of 4.
+
+```{r visualization}
+ml_131 |>
+  count(cohort, n_ml_areas) |>
+  group_by(cohort) |>
+  mutate(pct = n / sum(n)) |>
+  ungroup() |>
+  mutate(n_ml_areas = factor(n_ml_areas, levels = 6:1)) |>
+  ggplot(aes(x = cohort, y = pct, fill = n_ml_areas)) +
+  geom_col(width = 0.6) +
+  geom_text(data = ml_131 |>
+              count(cohort),
+            aes(x = cohort, y = 1.04, label = paste0('n = ', n)),
+            inherit.aes = FALSE) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_viridis_d(direction = -1) +
+  labs(title = 'Number of ML areas selected: 131 only vs. 131 + 134',
+       subtitle = 'Percent of students within each group',
+       x = NULL, y = 'Percent of students', fill = 'ML areas\nselected') +
+  theme_bw()
+```
 
 ### ML Interest by Area
 
