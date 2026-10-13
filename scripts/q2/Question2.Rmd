@@ -15,6 +15,7 @@ library(ggplot2)
 library(tidyr)
 library(knitr)
 library(scales)
+library(purrr)
 
 fig_dir <- "../../results/q2/figures"
 table_dir <- "../../results/q2/tables"
@@ -587,7 +588,7 @@ ml_131 |>
 
 Even after removing the 5 students who never took PSTAT 131, the results look almost the same as before. Students who took only 131 picked slightly more ML areas on average (4.06 vs. 3.85), and both groups had a median of 4.
 
-```{r visualization}
+```{r graph}
 ml_131 |>
   count(cohort, n_ml_areas) |>
   group_by(cohort) |>
@@ -640,6 +641,29 @@ wilcox.test(n_ml_areas ~ cohort, data = ml_131, exact = FALSE)
 ```
 
 Just like before, none of the differences were statistically signficant. Every Fisher p value was above 0.05 (the closest being dqta engineering at p = 0.198), and the Wilcox test showed no real differences in the total number of ML areas picked (W = 186, p = 0.689). So, among students who already took PSTAT 131, also taking PSTAT 134 does not seem to be linked to more interst in machine learning.
+
+```{r graph2}
+odds_131 <- area_131 |>
+  group_by(area) |>
+  summarise(test = list(fisher.test(table(
+    factor(cohort, levels = c('131 only', '131 + 134')),
+    selected))), .groups = 'drop') |>
+  mutate(odds_ratio = map_dbl(test, ~ .x$estimate),
+         lower = map_dbl(test, ~ .x$conf.int[1]),
+         upper = map_dbl(test, ~ .x$conf.int[2]))
+
+ggplot(odds_131, aes(x = odds_ratio, y = reorder(area, odds_ratio))) +
+  geom_vline(xintercept = 1, linetype = 'dashed', color = 'grey50') +
+  geom_errorbarh(aes(xmin = lower, xmax = upper), height = 0.2, color = 'darkgrey') +
+  geom_point(size = 3, color = 'lightblue') +
+  scale_x_log10() +
+  labs(titel = 'Odds of selecting each ML area: 131 + 134 vs. 131 only',
+       subtitle = 'Right of the dashed line = more likely among 131 + 134 students',
+       x = 'Odds ratio (log scale) with 95% CI', y = NULL) +
+  theme_bw() +
+  theme(plot.title.position = 'plot')
+  
+```
 
 ## Drawbacks
 
