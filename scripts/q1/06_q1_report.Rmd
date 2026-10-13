@@ -1,5 +1,5 @@
 ---
-title: "Question 1 Report: UD PSTAT Course Count and Statistics Comfort"
+title: "Q1 Report: Upper-Div PSTAT Course Count and Statistics Comfort Correlation"
 output:
   html_document:
     toc: true
@@ -41,13 +41,13 @@ mean_all  <- mean(analysis$stat_comfort)
 
 ## Summary
 
-We asked: **Is the number of upper-division PSTAT courses a student has taken associated with their self-reported comfort level in statistics?**
+We asked this question: **Is the number of upper-division PSTAT courses a student has taken associated with their self-reported comfort level in statistics?**
 
-In this sample of `r n_total` students, we found no detectable association. Mean comfort stays near 4 for the groups with enough students to compare, and three different statistical approaches (an ordinal logistic regression, an ordinal GAM, and a Spearman rank correlation) all fail to find a relationship distinguishable from zero. The sample is small, and several course-count groups contain only one or two students, so the results are better read as "no clear pattern" than as "no relationship exists."
+  In this sample of `r n_total` students, we found no statistically significant association. Mean comfort stayed near 4 for the groups with enough students to compare, and three different statistical approaches (ordinal logistic regression, ordinal GAM, and Spearman rank correlation) all fail to find a relationship distinguishable from zero. The sample is small, and several course-count groups contain only one or two students, so the results are better interpreted as "no clear pattern" than as "no relationship exists."
 
 ## Data and Sample
 
-The analysis uses `r n_total` students, each with a count of UD PSTAT courses taken (`n_ud_pstat`) and a self-reported statistics comfort rating (`stat_comfort`).
+The analysis uses `r n_total` students, each with a count of Upper Division PSTAT courses taken (`n_ud_pstat`) and a self-reported statistics comfort rating (`stat_comfort`).
 
 - **Comfort ratings are concentrated at the high end.** Only ratings 3, 4 and 5 appear: `r rating_n[["3"]]` students rated 3, `r rating_n[["4"]]` rated 4, and `r rating_n[["5"]]` rated 5. Nobody rated 1 or 2. Overall, `r round(pct_45)`% of students (`r sum(analysis$stat_comfort >= 4)` of `r n_total`) reported 4 or 5, and the mean rating is about `r round(mean_all, 1)`.
 - **Course counts range from 2 to 10 but are bunched in the middle.** The most common count is 5 (18 students), followed by 6 (11) and 7 (8). Groups of 4 to 7 courses together hold 43 of the 51 students (84%).
@@ -118,16 +118,16 @@ include_graphics(fig("fig8_spearman_rank_correlation.png"))
 
 ## Interpretation
 
-All three methods point the same way: **we do not see evidence that students who have taken more UD PSTAT courses report different comfort with statistics than students who have taken fewer, at least in this sample.** The descriptive figures and the models agree, which makes the conclusion more convincing than any single test would on its own.
+All three methods point the same way: **we do not see any statistically significant evidence that students who have taken more Upper Division PSTAT courses report different comfort with statistics than students who have taken fewer, at least in this sample.** The descriptive figures and the models agree, which makes the conclusion more convincing than any single test would on its own.
 
-Two points deserve emphasis:
+There are two points to be highlighted while we did this study:
 
 1. **A non-significant result is not proof of no relationship.** With 51 students, mostly in a narrow range of course counts, the analysis has limited power. The confidence bands in Figures 5 and 7 are wide, so a modest real association could be present and still go undetected here.
 2. **The apparent bumps and dips in the data are not trustworthy.** The high means at 2, 3 and 10 courses and the low mean at 8 courses each come from one or two students. The GAM's U-shape inherits this noise. We recommend not describing these as a pattern in any write-up.
 
-One useful way to describe the finding: most students in this sample, regardless of how many UD PSTAT courses they have taken, report being fairly comfortable with statistics (a 4 on a 5-point scale is typical).
+One useful way to describe the finding: most students in this sample, regardless of how many Upper-Div PSTAT courses they have taken, report being fairly comfortable with statistics (a 4 on a 5-point scale is typical).
 
-## Limitations
+## Our Limitations
 
 - **Small sample and small groups.** Five of nine course-count groups have fewer than 5 students, and the estimates for them are very unstable.
 - **Restricted range of the outcome.** Everyone rated comfort 3, 4 or 5. A ceiling effect like this compresses differences and makes associations harder to detect. It also means we cannot say anything about students with low comfort, who may be missing from the sample altogether.
