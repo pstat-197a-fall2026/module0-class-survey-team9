@@ -1,0 +1,91 @@
+---
+title: "Analysis of class surveys"
+subtitle: "If you want a subtitle put it here"
+author: "List names here"
+date: last-modified
+published-title: "Updated"
+editor: visual
+format:
+  html:
+    toc: true
+    toc-title: "Contents"
+    toc-depth: 3
+code-copy: true
+execute:
+  message: false
+  warning: false
+  echo: false
+  cache: true
+---
+
+Use this outline for one report covering both questions. Replace the bracketed writing prompts with your content before submitting.
+
+```{r}
+# load any other packages and read data here
+library(tidyverse)
+```
+
+## Executive summary
+
+\[Write one short paragraph covering the purpose of the survey analysis, the two research questions, the main finding for each question, and the overall takeaway. Write this section last.\]
+
+## Data description
+
+### Survey and respondents
+
+\[Explain how the survey was collected, who responded, and what information it contains. State the overall sample size.\]
+
+### Variables and measurements
+
+\[Define the variables used for each question: Q1 uses upper-division PSTAT course count and statistics comfort; Q2 uses PSTAT 131/134 course groups and the measure of ML interest. Explain how course counts, ratings, and interest scores were defined.\]
+
+### Analysis samples and data preparation
+
+\[State the sample size used for each question. For Q2, also state the size of each comparison group. Explain exclusions, missing-data handling, and relevant recoding. Clarify that "131 only" means taking 131 without taking 134.\]
+
+## Questions of interest
+
+1.  Is the number of upper-division PSTAT courses taken associated with students' self-reported statistics comfort?
+2.  Do students who have taken both PSTAT 131 and PSTAT 134 report greater interest in machine-learning-related fields than students who have taken PSTAT 131 only?
+
+## Findings
+
+### Q1: PSTAT coursework and statistics comfort
+
+#### Descriptive patterns
+
+\[Present the main distributions and patterns. Include one or two descriptive figures or tables. Explain what readers should notice in each.\]
+
+#### Statistical analysis and results
+
+\[Briefly explain the method and why it addresses Q1. Report the key estimates, uncertainty, and statistical results. Include a main model figure or results table.\]
+
+#### Interpretation
+
+\[Answer Q1 directly. Explain the practical meaning of the results. Discuss limitations specific to this analysis.\]
+
+### Q2: PSTAT 131/134 coursework and ML interest
+
+#### Descriptive comparison
+
+\[Compare the two groups' ML interest scores. Include a summary table or distribution plot. Show individual interest areas if they help answer the question.\]
+
+#### Statistical analysis and results
+
+\[Briefly explain the comparison method. Report the key estimates and statistical results. Distinguish the overall interest-score comparison from comparisons of individual interest areas.\]
+
+#### Interpretation
+
+\[Answer Q2 directly. Explain the practical meaning of the results. Discuss limitations specific to this comparison.\]
+
+## Conclusion
+
+\[Briefly bring together the answers to both questions. State the overall takeaway and shared limitations. Do not introduce new analyses or figures.\]
+
+## Appendix
+
+\[Optional: include additional plots, detailed model output, or supporting analyses that would interrupt the main report.\]
+
+## References
+
+\[Include any external sources cited in the report, if applicable.\]
