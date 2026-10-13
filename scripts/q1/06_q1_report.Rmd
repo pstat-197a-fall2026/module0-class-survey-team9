@@ -138,6 +138,6 @@ One useful way to describe the finding: most students in this sample, regardless
 
 ## Conclusion
 
-In this sample, the number of upper-division PSTAT courses taken is not meaningfully associated with self-reported statistics comfort. Mean comfort is steady around 4 across the groups with enough students, and neither a linear ordinal model, a flexible GAM nor a rank correlation detects a relationship. These findings describe patterns in this sample only: they do not establish statistical significance in a broader population or show that taking more courses causes greater (or lesser) comfort.
+In the sample, the number of upper-division PSTAT courses taken is not meaningfully associated with self-reported statistics comfort. Mean comfort is steady around 4 across the groups with enough students, and neither a linear ordinal model, a flexible GAM nor a rank correlation detects a relationship. These findings describe patterns in this sample only: they do not establish statistical significance in a broader population or show that taking more courses causes greater (or lesser) comfort.
 
 A larger sample, especially one that includes more students with fewer or more courses and more students with lower comfort, would be needed to tell whether a small association exists.
