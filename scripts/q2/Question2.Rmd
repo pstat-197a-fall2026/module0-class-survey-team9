@@ -361,6 +361,8 @@ ggplot(ml_data_134, aes(x = group_134, y = n_ml_areas, fill = group_134)) +
   theme(legend.position = 'none')
 ```
 
+
+
 The box plots for both groups look nearly identical: each has a median of 4 ML areas, and the middle 50% of students in both groups selected between 3 and 5 areas. As mention before the main difference is in the range, since students who did not take PSTAT 134 spread from 1 to 6 areas, while those who took PSTAT 134 stayed between 2 and 5. Overall, the plot supports our summary table, showing that the two groups have very similar distributions of ML interest.
 
 ### ML Interest by Area
@@ -387,6 +389,26 @@ ggplot(area_props_134, aes(x = area, y = proportion, fill = group_134)) +
        x = NULL, y = 'Proportion of students in group', fill = NULL) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+```{r}
+ggplot(area_props_134,
+       aes(x = group_134, y = reorder(area, proportion),
+           size = proportion, color = proportion)) +
+  geom_point(alpha = 0.85) +
+  geom_text(aes(label = scales::percent(proportion, accuracy = 1)),
+            size = 3.2, color = 'black', nudge_x = 0.25) +
+  scale_size(range = c(4,14), guide = 'none') +
+  scale_color_viridis_c(direction = -1, limits = c(0,1),
+                        labels = scales::percent, name = '% selected') +
+  labs(title = 'Percent of students selecting each ML area, by PSTAT 134 enrollment',
+       subtitle = 'Bigger and darker bubbles = more studnets in that group picked the area',
+       caption = 'Students could pick any number of the 6 ML areas. \nSample patterns only; not evidence of statistiacal signficiance.',
+       x = NULL, y = NULL) +
+  theme_bw() +
+  theme(plot.title.position = 'plot',
+        plot.caption = element_text(hjust = 0, color = 'grey40'))
+
 ```
 
 When we broke the ML interest down by area, some differences show up that the overall totals didn't catch initially. Students who took PSTAT 134 were a lot more into data acquisition and engineering (76.9% vs. 52.8%) and a little into deep learning (84.6% vs. 77.8%). On the other other hand, they picked statistical inference (46.2% vs. 69.4%). image analysis (46.2 % vs. 58.3%), and NLP (46.2% vs. 52.8%) less often. Predictive modeling was the top pick for both groups, with around 88.9% of non-134 students and 84/6% of 134 students choosing it. From this we can say that PSTAT 134 students might lean more toward data engineering and away from traditional stats, but since there are only 13 of them, these differences could just be a random chance.
