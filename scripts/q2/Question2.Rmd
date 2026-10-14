@@ -178,6 +178,34 @@ boxplot_131
 Here we have a boxplot showing the distributions of each cohort. It appears that students who have not taken PSTAT 131 have a larger range, since there are only 5 students.
 
 ```{r}
+mean_131 <- ml_data_131 |>
+  group_by(course_group) |>
+  summarise(n = n(),
+            mean_ml = mean(n_ml_areas),
+            se = sd(n_ml_areas) / sqrt(n),
+            lower = mean_ml - qt(0.975, n - 1) * se,
+            upper = mean_ml + qt(0.975, n - 1) * se,
+            .groups = 'drop')
+
+ggplot(mean_131, aes(x = course_group, y = mean_ml)) +
+  geom_jitter(data = ml_data_131, aes(y = n_ml_areas),
+              width = 0.08, height = 0.08, alpha = 0.3, color = 'blue') +
+  geom_line(aes(group = 1), color = 'gray') +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.1, color = 'black') +
+  geom_point(size = 3, color = 'darkgray') +
+  geom_text(aes(y = 6.5, label = paste0('n = ', n)), size = 3.5) +
+  scale_y_continuous(limits = c(0, 6.6), breaks = 0:6) +
+  labs(title = 'Mean number of ML areas selected, by PSTAT 131 enrollment',
+       subtitle = 'Blue dots are group means; gray dots are individual students',
+       caption = 'Bars are 95% confidence intervals for the mean.\nOnly 5 students did not take PSTAT 131, so read that group cautiously.',
+       x = NULL, y = 'Number of ML areas (out of 6)') +
+  theme_minimal() +
+  theme(plot.title.position = 'plot',
+        plot.caption = element_text(hjust = 0, color = 'grey40'))
+```
+
+
+```{r}
 area_proportions <- problem2 %>%
   mutate(
     took_131 = str_detect(
@@ -456,40 +484,22 @@ cohort_distribution <- ml_131 |>
 cohort_distribution
 ```
 
-Besides 'Data acquisition and engineering', it appears that students who only took PSTAT 131 have a higher probability of choosing the other 5 interests.
-
-Again, we do not have convincing evidence that there is a difference in the number of machine learning interests between those who took PSTAT 131 and those who also took PSTAT 134.
-
-### Khoi
-
-One issue with the last comparison is that the "did not take PSTAT 134" group also included 5 students who never took PSTAT 131. To get a cleaner comparison, we can now just look at students who took PSTAT 131 and split them into those who stopped at 131 and those who went on to take 134 as well. This way, everone has the same intro ML background, and we can see whether taking 134 on top 131 makes a difference.
-
-
-This leaves us with 44 students, 31 who only took PSTAT 131 and 13 who took both.
-
-### Summary
-
-```{r}
-ml_131 |>
-  group_by(cohort) |>
-  summarise(n = n(),
-            mean_ml_areas = mean(n_ml_areas),
-            median_ml_areas = median(n_ml_areas)) |>
-  kable(digits = 2, caption = 'ML related areas selected: 131 only vs. 131 + 134')
-
-
-```
-
-Even after removing the 5 students who never took PSTAT 131, the results look almost the same as before. Students who took only 131 picked slightly more ML areas on average (4.06 vs. 3.85), and both groups had a median of 4.
-
+The distributions for both groups look very similar, with most students in each group selecting between 3 and 5 ML areas. The main difference is at the top of the scale, where some students who only took PSTAT 131 selected all 6 areas, while none of the students who took both courses did.
 
 ### ML Interest by Area
 
 ```{r}
-area_131 |>
+comparison_proportions <- area_131 |>
   group_by(cohort, area) |>
-  summarise(proportion = mean(selected), .groups = 'drop') |>
-  ggplot(aes(x = area, y = proportion, fill = cohort)) +
+  summarise(n_selected = sum(selected),
+            n_students = n(),
+            proportion = n_selected / n_students, 
+            .groups = 'drop')
+
+save_table(comparison_proportions, 'ml_area_proportions_131_vs_131_134.csv')
+
+comparison_plot <- ggplot(comparison_proportions,
+                          aes(x = area, y = proportion, fill = cohort)) +
   geom_col(position = 'dodge') +
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
   labs(title = 'ML related interests: 131 only vs. 131 + 134',
@@ -497,47 +507,75 @@ area_131 |>
   theme_bw() +
   theme(axis.text.x = element_text(angle = 35, hjust = 1))
 
+comparison_plot
+
+ggsave(
+  file.path(fig_dir, "fig_4_ml_area_proportions_131_vs_131_134.png"),
+  plot = comparison_plot,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
 ```
 
-From this it looks like it follows the same pattern as before, with 131 + 134 students leaning more toward data engineering (77% vs. 55%) and less toward statistical inference (46% vs. 68%). The other areas were pretty similar between the two groups.
+This follows from the same pattern as the PSTAT 134 vs. non-134 comparison. Students who took both courses leaned more toward data acquistiion and engineering (77% vs. 55%) and less toward statistical inference (46% vs. 68%). The other areas were fairly similar between the two groups.
 
 ### Testing for Differences
 
-Finally, we can check whether any of these differences are statistically signficant.
+Finally, we can check whether any of these differences are statistically significant. For each ML area, we use Fisher's exact test, since it works well with small groups like our 13 students who took both courses. The test also gives an odds ratio, which tells us how much more (or less) likely 131 + 134 students were to select each area compared to 131 only students.
 
 ```{r}
-area_131 |>
-  group_by(area) |>
-  summarise(p_value = fisher.test(table(cohort, selected))$p.value) |>
-  kable(digits = 3, caption = "Fisher's exact test by ML Area: 131 only vs. 131 + 134")
-
-wilcox.test(n_ml_areas ~ cohort, data = ml_131, exact = FALSE)
-```
-
-Just like before, none of the differences were statistically signficant. Every Fisher p value was above 0.05 (the closest being dqta engineering at p = 0.198), and the Wilcox test showed no real differences in the total number of ML areas picked (W = 186, p = 0.689). So, among students who already took PSTAT 131, also taking PSTAT 134 does not seem to be linked to more interst in machine learning.
-
-```{r graph2}
-odds_131 <- area_131 |>
+fisher_131 <- area_131 |>
   group_by(area) |>
   summarise(test = list(fisher.test(table(
     factor(cohort, levels = c('131 only', '131 + 134')),
     selected))), .groups = 'drop') |>
-  mutate(odds_ratio = map_dbl(test, ~ .x$estimate),
+  mutate(p_value = map_dbl(test, ~ .x$p.value),
+         odds_ratio = map_dbl(test, ~ .x$estimate),
          lower = map_dbl(test, ~ .x$conf.int[1]),
-         upper = map_dbl(test, ~ .x$conf.int[2]))
+         upper = map_dbl(test, ~ .x$conf.int[2])) |>
+  select(-test)
 
-ggplot(odds_131, aes(x = odds_ratio, y = reorder(area, odds_ratio))) +
+save_table(fisher_131, 'fisher_tests_131_vs_131_134.csv')
+
+kable(fisher_131, 
+      digits = 3,
+      captions = "Fisher's exact test by ML area: 131 only vs. 131 + 134")
+```
+
+For every ML area, the p-value is well above 0.05, so none of the differences between the two groups are statistically significant. The largest gap was in the data acquisition and engineering, where students who took both courses had about 2.7 times the odds of selecting it compared to 131 only students (p = 0.198). In the other direction, they had the lower odds of selecting statistical models and inference (odds ratio = 0.417, p = 0.309). Deep learning and NLP were almost identical between the groups, with odds ratios close to 1 and p-values of 1.. Every 95% confidence interval also includes 1, and more are very wide (data engineering was ranging from 0.54 to 18.15). What this means is that our data is consistent with taking PSTAT 134 having no effect at all, and the small 131 + 134 group having 13 students makes it hard to find any real difference.
+
+
+```{r}
+ggplot(fisher_131, aes(x = odds_ratio, y = reorder(area, odds_ratio))) +
   geom_vline(xintercept = 1, linetype = 'dashed', color = 'grey50') +
   geom_errorbarh(aes(xmin = lower, xmax = upper), height = 0.2, color = 'darkgrey') +
   geom_point(size = 3, color = 'lightblue') +
   scale_x_log10() +
-  labs(titel = 'Odds of selecting each ML area: 131 + 134 vs. 131 only',
+  labs(title = 'Odds of selecting each ML area: 131 + 134 vs. 131 only',
        subtitle = 'Right of the dashed line = more likely among 131 + 134 students',
        x = 'Odds ratio (log scale) with 95% CI', y = NULL) +
   theme_bw() +
   theme(plot.title.position = 'plot')
   
 ```
+This odds ratio plot shows the same results visually. The points for data engineering and deep learning fall to the right of the dashed line, while the other four areas fall to the left. However, every confidence interval crosses the dashed line at 1, so none of these differences can be separated from random chance.
+
+Next, we compare the total number of ML areas each student selected. To achieve that, we can use a one sided Wilcoxon rank-sum test because the totals are small counts with only 13 students in one group, and our question asks whether 131 + 134 students report greater ML interest.
+
+```{r}
+test_result <- wilcox.test(
+  ml_131$n_ml_areas[ml_131$cohort == '131 + 134'],
+  ml_131$n_ml_areas[ml_131$cohort == '131 only'],
+  alternative = 'greater',
+  exact = FALSE
+)
+
+test_result
+
+```
+
+From this test it found no evidence that students who took both courses selected more ML areas than students who took only PSTAT 131 (W = 186, p = 0.665). In fact, their mean was slightly lower (3.85 vs. 4.06). Together with the Fishers tests, this suggests that among students who have already taken PSTAT 131, also taking PSTAT 134 is not associated with greater interest in machine learning.
 
 ## Drawbacks
 
