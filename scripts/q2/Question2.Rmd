@@ -86,7 +86,6 @@ ml_areas <- c(
 )
 ```
 
-Again, this part is subjective since most of the options can be interpreted to fit into the scope of machine learning. However, we only chose six out of the eleven topics to provide an adequate representation of what is closest to machine learning.
 
 We chose these six areas because they were the most closely related to machine learning. Students were able to select from eleven areas of interest, and most of them can be argued to connect to ML in some way. However, this selection focuses primarily on areas involving building, training, or applying predictive models, or preparing the data those models rely on. We recognize that this choice of selection is somewhat subjective and that a different selection could lead to slightly different results.
 
@@ -95,7 +94,7 @@ We chose these six areas because they were the most closely related to machine l
 To begin, we will explore students who have taken PSTAT 131 and students who have not taken PSTAT 131.
 
 ```{r}
-enrollment_table <- problem2 %>%
+enrollment_table <- problem2 |>
   mutate(
     course_group = if_else(
       str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
@@ -125,33 +124,21 @@ kable(
 Here, we can see that only 5 students have not taken PSTAT 131, totaling around 10% of the respondents. On the other hand, 90% of students have taken PSTAT 131 at 44 students.
 
 ```{r}
-ml_data <- problem2 %>%
-  mutate(
-    took_131 = str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
-    took_134 = str_detect(coalesce(courses, ""), "\\bPSTAT 134\\b"),
-    course_group = case_when(
-      took_131 & took_134 ~ "Both courses",
-      took_131 & !took_134 ~ "PSTAT 131 only",
-      TRUE ~ NA_character_
-    ),
-    areas = coalesce(areas, "")
-  ) %>%
-  filter(!is.na(course_group)) %>%
-  crossing(area = ml_areas) %>%
-  mutate(selected = str_detect(areas, fixed(area))) %>%
-  group_by(response_id, course_group) %>%
-  summarise(
-    n_ml_areas = sum(selected),
-    .groups = "drop"
-  )
+ml_data_131 <- problem2 |>
+  mutate(course_group = if_else(str_detect(courses, "\\bPSTAT 131\\b"),
+                                "Took PSTAT 131", "Did not take PSTAT 131")) |>
+  crossing(area = ml_areas) |>
+  mutate(selected = str_detect(areas, fixed(area))) |>
+  group_by(response_id, course_group) |>
+  summarise(n_ml_areas = sum(selected), .groups = "drop")
 
-ml_data
+ml_data_131
 ```
 
 Now we have added another component: the number of machine learning area interests each student selected. We have printed out the raw table to see this addition.
 
 ```{r}
-ml_summary <- ml_data %>%
+ml_summary <- ml_data_131 %>%
   group_by(course_group) %>%
   summarise(
     n = n(),
@@ -173,7 +160,7 @@ Here we have summary statistics for students who have taken PSTAT 131 vs student
 
 ```{r}
 boxplot_131 <- ggplot(
-  ml_data,
+  ml_data_131,
   aes(x = course_group, y = n_ml_areas, fill = course_group)
 ) +
   geom_boxplot() +
@@ -186,14 +173,6 @@ boxplot_131 <- ggplot(
   theme(legend.position = "none")
 
 boxplot_131
-
-ggsave(
-  file.path(fig_dir, "fig_1_ml_interests_boxplot.png"),
-  plot = boxplot_131,
-  width = 8,
-  height = 5,
-  dpi = 300
-)
 ```
 
 Here we have a boxplot showing the distributions of each cohort. It appears that students who have not taken PSTAT 131 have a larger range, since there are only 5 students.
@@ -269,7 +248,7 @@ We can see that 'Deep learning and neural networks' has the biggest gap in propo
 ```{r}
 wilcox_result <- wilcox.test(
   n_ml_areas ~ course_group,
-  data = ml_data,
+  data = ml_data_131,
   exact = FALSE
 )
 
@@ -411,6 +390,25 @@ There a few things to consider when looking at these results. First, the groups 
 ### Henry
 
 Now we will answer our initial question of whether taking PSTAT 131 or also taking PSTAT 134 has any correlation with the number of machine learning interests selected.
+
+```{r}
+ml_data <- problem2 %>%
+  mutate(
+    took_131 = str_detect(coalesce(courses, ""), "\\bPSTAT 131\\b"),
+    took_134 = str_detect(coalesce(courses, ""), "\\bPSTAT 134\\b"),
+    course_group = case_when(
+      took_131 & took_134 ~ "Both courses",
+      took_131 & !took_134 ~ "PSTAT 131 only",
+      TRUE ~ NA_character_
+    ),
+    areas = coalesce(areas, "")
+  ) %>%
+  filter(!is.na(course_group)) %>%
+  crossing(area = ml_areas) %>%
+  mutate(selected = str_detect(areas, fixed(area))) %>%
+  group_by(response_id, course_group) %>%
+  summarise(n_ml_areas = sum(selected), .groups = "drop")
+```
 
 ```{r}
 comparison_summary <- ml_data %>%
