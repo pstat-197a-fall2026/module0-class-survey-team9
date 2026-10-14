@@ -197,7 +197,7 @@ ggplot(mean_131, aes(x = course_group, y = mean_ml)) +
   scale_y_continuous(limits = c(0, 6.6), breaks = 0:6) +
   labs(title = 'Mean number of ML areas selected, by PSTAT 131 enrollment',
        subtitle = 'Blue dots are group means; gray dots are individual students',
-       caption = 'Bars are 95% confidence intervals for the mean.\nOnly 5 students did not take PSTAT 131, so read that group cautiously.',
+       caption = 'Bars are 95% confidence intervals for the mean.\nOnly 5 students did not take PSTAT 131, so observe with that in mind.',
        x = NULL, y = 'Number of ML areas (out of 6)') +
   theme_minimal() +
   theme(plot.title.position = 'plot',
