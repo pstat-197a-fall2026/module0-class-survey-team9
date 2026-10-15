@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="List names here">
-<meta name="dcterms.date" content="2026-10-13">
+<meta name="author" content="Aileen Tao, Elijah Gabriel Ret, Erika Nares, Henry Ding, Khoi Huynh, Jacob Low">
+<meta name="dcterms.date" content="2026-10-15">
 
-<title>Analysis of class surveys</title>
+<title>Module 0 Project: Analysis of Class Surveys</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -24,6 +24,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -74,8 +109,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Analysis of class surveys</h1>
-<p class="subtitle lead">If you want a subtitle put it here</p>
+<h1 class="title">Module 0 Project: Analysis of Class Surveys</h1>
 </div>
 
 
@@ -85,14 +119,14 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>List names here </p>
+             <p>Aileen Tao, Elijah Gabriel Ret, Erika Nares, Henry Ding, Khoi Huynh, Jacob Low </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Updated</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 13, 2026</p>
+      <p class="date">October 15, 2026</p>
     </div>
   </div>
   
@@ -104,7 +138,6 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>Use this outline for one report covering both questions. Replace the bracketed writing prompts with your content before submitting.</p>
 <section id="executive-summary" class="level2">
 <h2 class="anchored" data-anchor-id="executive-summary">Executive summary</h2>
 <p>[Write one short paragraph covering the purpose of the survey analysis, the two research questions, the main finding for each question, and the overall takeaway. Write this section last.]</p>
@@ -114,14 +147,43 @@ ul.task-list li input[type="checkbox"] {
 <section id="survey-and-respondents" class="level3">
 <h3 class="anchored" data-anchor-id="survey-and-respondents">Survey and respondents</h3>
 <p>[Explain how the survey was collected, who responded, and what information it contains. State the overall sample size.]</p>
+<p>Our second question surrounds the association between taking certain PSTAT courses and having specific areas of interest. Specifically, we want to see if taking PSTAT 131 and/or PSTAT 134 has any correlation in machine learning domain interests. We chose the 131/134 courses because its course description fits the topic of machine learning and its techniques pretty well. It is a course that is well known in the PSTAT department, and with the ongoing advancements in artificial intelligence and machine learning, we only feel that the latter is worth exploring through our survey data.</p>
+<p>We tackled this question in two parts: 1) isolating PSTAT 131 and PSTAT 134 separately against students who have not taken the class, respectively, and 2) comparing taking PSTAT 134 vs only taking PSTAT 131. With that said, we used the 49 students who consented to having both datasets shared, as we needed to join by <code>response_id</code>.</p>
 </section>
 <section id="variables-and-measurements" class="level3">
 <h3 class="anchored" data-anchor-id="variables-and-measurements">Variables and measurements</h3>
 <p>[Define the variables used for each question: Q1 uses upper-division PSTAT course count and statistics comfort; Q2 uses PSTAT 131/134 course groups and the measure of ML interest. Explain how course counts, ratings, and interest scores were defined.]</p>
+<p>For Question 2, we only needed to use <code>courses</code> and <code>areas</code> for our analysis.</p>
+<p><code>courses</code> was straightforward as we needed to filter the students whether or not they took such classes (i.e PSTAT 131 and PSTAT 134). We also checked that everyone who took PSTAT 134 also took PSTAT 131 as that is a prerequisite. This assumption was validated.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ml_areas <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Analysis or classification of images"</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Deep learning and neural networks"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Data acquisition and engineering"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Natural language processing and analysis of text"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Predictive modeling, generally"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Statistical models and inference, generally"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Machine Learning Interests:</p>
+<ul>
+<li><p>“Analysis or classification of images”</p></li>
+<li><p>“Deep learning and neural networks”,</p></li>
+<li><p>“Data acquisition and engineering”,</p></li>
+<li><p>“Natural language processing and analysis of text”,</p></li>
+<li><p>“Predictive modeling, generally”</p></li>
+<li><p>“Statistical models and inference, generally”</p></li>
+</ul>
+<p>For ML interests, we chose these six areas because they were the most closely related to machine learning. Students were able to select from eleven areas of interest, and most of them can be argued to connect to ML in some way. However, this selection focuses primarily on areas involving building, training, or applying predictive models, or preparing the data those models rely on. We recognize that this choice of selection is somewhat subjective and that a different selection could lead to slightly different results.</p>
 </section>
 <section id="analysis-samples-and-data-preparation" class="level3">
 <h3 class="anchored" data-anchor-id="analysis-samples-and-data-preparation">Analysis samples and data preparation</h3>
 <p>[State the sample size used for each question. For Q2, also state the size of each comparison group. Explain exclusions, missing-data handling, and relevant recoding. Clarify that “131 only” means taking 131 without taking 134.]</p>
+<p>We have already joined the two datasets (<strong>background-clean.csv</strong> and <strong>interest-clean.csv</strong>) by <code>response_id</code>. We can see that there are 49 respondents who consented to sharing both responses. While there are 15 columns, we will mainly be using <code>courses</code> and <code>areas</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>problem2 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"processed"</span>, <span class="st">"q2"</span>, <span class="st">"problem2.csv"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Out of the 49 students, 44 students took PSTAT 131 and only 13 of those students took PSTAT 134.</p>
 </section>
 </section>
 <section id="questions-of-interest" class="level2">
@@ -153,14 +215,569 @@ ul.task-list li input[type="checkbox"] {
 <section id="descriptive-comparison" class="level4">
 <h4 class="anchored" data-anchor-id="descriptive-comparison">Descriptive comparison</h4>
 <p>[Compare the two groups’ ML interest scores. Include a summary table or distribution plot. Show individual interest areas if they help answer the question.]</p>
+<p>To begin, we will explore students who have taken PSTAT 131 and students who have not taken PSTAT 131.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ml_data_131 <span class="ot">&lt;-</span> problem2 <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">course_group =</span> <span class="fu">if_else</span>(<span class="fu">str_detect</span>(courses, <span class="st">"</span><span class="sc">\\</span><span class="st">bPSTAT 131</span><span class="sc">\\</span><span class="st">b"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                                <span class="st">"Took PSTAT 131"</span>, <span class="st">"Did not take PSTAT 131"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">area =</span> ml_areas) <span class="sc">|&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">selected =</span> <span class="fu">str_detect</span>(areas, <span class="fu">fixed</span>(area))) <span class="sc">|&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(response_id, course_group) <span class="sc">|&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_ml_areas =</span> <span class="fu">sum</span>(selected), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>ml_summary <span class="ot">&lt;-</span> ml_data_131 <span class="sc">%&gt;%</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(course_group) <span class="sc">%&gt;%</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_ml_areas =</span> <span class="fu">mean</span>(n_ml_areas),</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_ml_areas =</span> <span class="fu">median</span>(n_ml_areas),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">save_table</span>(ml_summary, <span class="st">"ml_interest_summary_by_pstat131.csv"</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  ml_summary,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"ML-Related Interests by PSTAT 131 Enrollment"</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>ML-Related Interests by PSTAT 131 Enrollment</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">course_group</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">mean_ml_areas</th>
+<th style="text-align: right;">median_ml_areas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Did not take PSTAT 131</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3.6</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Took PSTAT 131</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Here we have summary statistics for students who have taken PSTAT 131 vs students who have not taken PSTAT 131. The mean and median number of machine learning areas are shown. The mean is larger for students who took PSTAT 131, while the median is larger for students who have not taken PSTAT 131.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mean_131 <span class="ot">&lt;-</span> ml_data_131 <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(course_group) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">mean_ml =</span> <span class="fu">mean</span>(n_ml_areas),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">se =</span> <span class="fu">sd</span>(n_ml_areas) <span class="sc">/</span> <span class="fu">sqrt</span>(n),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">lower =</span> mean_ml <span class="sc">-</span> <span class="fu">qt</span>(<span class="fl">0.975</span>, n <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> se,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">upper =</span> mean_ml <span class="sc">+</span> <span class="fu">qt</span>(<span class="fl">0.975</span>, n <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> se,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(mean_131, <span class="fu">aes</span>(<span class="at">x =</span> course_group, <span class="at">y =</span> mean_ml)) <span class="sc">+</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">data =</span> ml_data_131, <span class="fu">aes</span>(<span class="at">y =</span> n_ml_areas),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">width =</span> <span class="fl">0.08</span>, <span class="at">height =</span> <span class="fl">0.08</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">color =</span> <span class="st">'blue'</span>) <span class="sc">+</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> <span class="dv">1</span>), <span class="at">color =</span> <span class="st">'gray'</span>) <span class="sc">+</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), <span class="at">width =</span> <span class="fl">0.1</span>, <span class="at">color =</span> <span class="st">'black'</span>) <span class="sc">+</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">'darkgray'</span>) <span class="sc">+</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fl">6.5</span>, <span class="at">label =</span> <span class="fu">paste0</span>(<span class="st">'n = '</span>, n)), <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">6.6</span>), <span class="at">breaks =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">6</span>) <span class="sc">+</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Mean number of ML areas selected, by PSTAT 131 enrollment'</span>,</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">'Blue dots are group means; gray dots are individual students'</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">'Bars are 95% confidence intervals for the mean.</span><span class="sc">\n</span><span class="st">Only 5 students did not take PSTAT 131, so observe with that in mind.'</span>,</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">'Number of ML areas (out of 6)'</span>) <span class="sc">+</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">'plot'</span>,</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">'grey40'</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="updated_report_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The graph suggests that students who took PSTAT 131 selected slightly more machine-learning-related interest areas on average than students who did not take PSTAT 131. However, the difference appears small, and the non-PSTAT 131 group is very small.</p>
+<p>PSTAT 134 (Statistical Data Science) is a natural next step to look at. Since PSTAT 131 is a prerequisite, taking 134 reflects a student choosing to continue further into data science and machine learning, which might show up as a stronger or different ML interests. As done before, we can start by checking how many students fall into each group.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>q134 <span class="ot">&lt;-</span> problem2 <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">group_134 =</span> <span class="fu">if_else</span>(<span class="fu">str_detect</span>(courses, <span class="fu">fixed</span>(<span class="st">'PSTAT 134'</span>)),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                             <span class="st">'Took PSTAT 134'</span>, <span class="st">'Did not take PSTAT 134'</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>q134 <span class="sc">|&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(group_134, <span class="at">name =</span> <span class="st">'n_students'</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">proportion =</span> n_students <span class="sc">/</span> <span class="fu">sum</span>(n_students)) <span class="sc">|&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">caption =</span> <span class="st">'Students by PSTAT 134 enrollment'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Students by PSTAT 134 enrollment</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">group_134</th>
+<th style="text-align: right;">n_students</th>
+<th style="text-align: right;">proportion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Did not take PSTAT 134</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">0.735</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Took PSTAT 134</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0.265</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>area_long_134 <span class="ot">&lt;-</span> q134 <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">area =</span> ml_areas) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">selected =</span> <span class="fu">str_detect</span>(areas, <span class="fu">fixed</span>(area)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>PSTAT 134 is not a commonly taken course among the students in our sample. Only 13 of the 49 respondents (26.5%) reported taking PSTAT 134, while 36 (73.5%) had not. This is a big contrast with PSTAT 131, which 44 of the 49 students (89.8%) had taken. Since PSTAT 131 is a prerequisite for PSTAT 134, most students have completed the introductory machine learning course but relatively few continued on to 134, leading to a unbalanced comparison.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ml_data_134 <span class="ot">&lt;-</span> area_long_134 <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(response_id, group_134) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_ml_areas =</span> <span class="fu">sum</span>(selected), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>ml_data_134 <span class="sc">|&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(group_134) <span class="sc">|&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">mean_ml_areas =</span> <span class="fu">mean</span>(n_ml_areas),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">median_ml_areas =</span> <span class="fu">median</span>(n_ml_areas),</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">min =</span> <span class="fu">min</span>(n_ml_areas),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">max =</span> <span class="fu">max</span>(n_ml_areas)) <span class="sc">|&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">caption =</span> <span class="st">'Number of ML-related areas selected, by PSTAT 134 enrollment'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Number of ML-related areas selected, by PSTAT 134 enrollment</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">group_134</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">mean_ml_areas</th>
+<th style="text-align: right;">median_ml_areas</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Did not take PSTAT 134</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Took PSTAT 134</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3.85</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Students who did not take PSTAT 134 selected slightly more ML related areas on average (4.00) than those who took PSTAT 134 (3.85), although both groups share the same median of 4. Something to note is that students who did not take PSTAT 134 also had a wider range (1 to 6 areas) than those who took it to (2 to 5 areas), likely because that group is nearly three times larger. In all, we can see that the two groups show very similar levels of ML interest, suggesting that taking PSTAT 134 is not really associated with selecting more ML related areas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>area_props_134 <span class="ot">&lt;-</span> area_long_134 <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(group_134, area) <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_selected =</span> <span class="fu">sum</span>(selected),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">n_students =</span> <span class="fu">n</span>(),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">proportion =</span> n_selected <span class="sc">/</span> n_students,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(area_props_134,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> group_134, <span class="at">y =</span> <span class="fu">reorder</span>(area, proportion),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> proportion, <span class="at">color =</span> proportion)) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(proportion, <span class="at">accuracy =</span> <span class="dv">1</span>)),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">size =</span> <span class="fl">3.2</span>, <span class="at">color =</span> <span class="st">'black'</span>, <span class="at">nudge_x =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">14</span>), <span class="at">guide =</span> <span class="st">'none'</span>) <span class="sc">+</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_viridis_c</span>(<span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>                        <span class="at">labels =</span> scales<span class="sc">::</span>percent, <span class="at">name =</span> <span class="st">'% selected'</span>) <span class="sc">+</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Percent of students selecting each ML area, by PSTAT 134 enrollment'</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">'Bigger and darker bubbles = more studnets in that group picked the area'</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">'Students could pick any number of the 6 ML areas. </span><span class="sc">\n</span><span class="st">Sample patterns only; not evidence of statistiacal signficiance.'</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">'plot'</span>,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">'grey40'</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="updated_report_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>When we broke the ML interest down by area, some differences show up that the overall totals didn’t catch initially. Students who took PSTAT 134 were a lot more into data acquisition and engineering (76.9% vs.&nbsp;52.8%) and a little into deep learning (84.6% vs.&nbsp;77.8%). On the other other hand, they picked statistical inference (46.2% vs.&nbsp;69.4%). image analysis (46.2 % vs.&nbsp;58.3%), and NLP (46.2% vs.&nbsp;52.8%) less often. Predictive modeling was the top pick for both groups, with around 88.9% of non-134 students and 84/6% of 134 students choosing it. From this we can say that PSTAT 134 students might lean more toward data engineering and away from traditional stats, but since there are only 13 of them, these differences could just be a random chance.</p>
+<p>Now we will go back to our main question: among students who have taken PSTAT 131, do those who also took PSTAT 134 report more interest in machine learning? One issue with the PSTAT 134 vs.&nbsp;non-134 comparison is that the “did not take PSTAT 134” group also included the 5 students who never took PSTAT 131. To get a cleaner comparison, we can now look only at students who took PSTAT 131 and split them into those who stopped at 131 and those who went on to take 134 as well. This way, everyone has the same intro ML background, and we can see whether taking 134 on top of 131 makes a difference.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>area_131 <span class="ot">&lt;-</span> area_long_134 <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(courses, <span class="fu">fixed</span>(<span class="st">'PSTAT 131'</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cohort =</span> <span class="fu">if_else</span>(group_134 <span class="sc">==</span> <span class="st">'Took PSTAT 134'</span>, <span class="st">'131 + 134'</span>, <span class="st">'131 only'</span>))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>ml_131 <span class="ot">&lt;-</span> area_131 <span class="sc">|&gt;</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(response_id, cohort) <span class="sc">|&gt;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_ml_areas =</span> <span class="fu">sum</span>(selected), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>comparison_summary <span class="ot">&lt;-</span> ml_131 <span class="sc">|&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cohort) <span class="sc">|&gt;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_ml_areas =</span> <span class="fu">mean</span>(n_ml_areas),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_ml_areas =</span> <span class="fu">median</span>(n_ml_areas),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  comparison_summary,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"ML Interests: PSTAT 131 Only vs Both Courses"</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>ML Interests: PSTAT 131 Only vs Both Courses</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">cohort</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">mean_ml_areas</th>
+<th style="text-align: right;">median_ml_areas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">131 + 134</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3.846</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">131 only</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">4.065</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Student who took only PSTAT 131 picked slightly more ML areas on average (4.06 vs.&nbsp;3.85), and both groups had a median of 4. These numbers are almost the same as in the PSTAT 134 vs.&nbsp;non-134 comparison, so removing the 5 students who never took 131 did not change much.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cohort_distribution <span class="ot">&lt;-</span> ml_131 <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(cohort, n_ml_areas) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cohort) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pct =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_ml_areas =</span> <span class="fu">factor</span>(n_ml_areas, <span class="at">levels =</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> cohort, <span class="at">y =</span> pct, <span class="at">fill =</span> n_ml_areas)) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">width =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">data =</span> ml_131 <span class="sc">|&gt;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>              <span class="fu">count</span>(cohort),</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> cohort, <span class="at">y =</span> <span class="fl">1.04</span>, <span class="at">label =</span> <span class="fu">paste0</span>(<span class="st">'n = '</span>, n)),</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>percent) <span class="sc">+</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Number of ML areas selected: 131 only vs. 131 + 134'</span>,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">'Percent of students within each group'</span>,</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">'Percent of students'</span>, <span class="at">fill =</span> <span class="st">'ML areas</span><span class="sc">\n</span><span class="st">selected'</span>) <span class="sc">+</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>cohort_distribution</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="updated_report_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The distributions for both groups look very similar, with most students in each group selecting between 3 and 5 ML areas. The main difference is at the top of the scale, where some students who only took PSTAT 131 selected all 6 areas, while none of the students who took both courses did.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>comparison_proportions <span class="ot">&lt;-</span> area_131 <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cohort, area) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_selected =</span> <span class="fu">sum</span>(selected),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">n_students =</span> <span class="fu">n</span>(),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">proportion =</span> n_selected <span class="sc">/</span> n_students, </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">save_table</span>(comparison_proportions, <span class="st">'ml_area_proportions_131_vs_131_134.csv'</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>comparison_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(comparison_proportions,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">aes</span>(<span class="at">x =</span> area, <span class="at">y =</span> proportion, <span class="at">fill =</span> cohort)) <span class="sc">+</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">'dodge'</span>) <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>percent, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'ML related interests: 131 only vs. 131 + 134'</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">'Proportion of students in group'</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">35</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>comparison_plot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="updated_report_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">file.path</span>(fig_dir, <span class="st">"fig_4_ml_area_proportions_131_vs_131_134.png"</span>),</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">plot =</span> comparison_plot,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">width =</span> <span class="dv">11</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">height =</span> <span class="dv">7</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">dpi =</span> <span class="dv">300</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This follows from the same pattern as the PSTAT 134 vs.&nbsp;non-134 comparison. Students who took both courses leaned more toward data acquistiion and engineering (77% vs.&nbsp;55%) and less toward statistical inference (46% vs.&nbsp;68%). The other areas were fairly similar between the two groups.</p>
 </section>
 <section id="statistical-analysis-and-results-1" class="level4">
 <h4 class="anchored" data-anchor-id="statistical-analysis-and-results-1">Statistical analysis and results</h4>
 <p>[Briefly explain the comparison method. Report the key estimates and statistical results. Distinguish the overall interest-score comparison from comparisons of individual interest areas.]</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>wilcox_result <span class="ot">&lt;-</span> <span class="fu">wilcox.test</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  n_ml_areas <span class="sc">~</span> course_group,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> ml_data_131,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">exact =</span> <span class="cn">FALSE</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>wilcox_result</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Wilcoxon rank sum test with continuity correction
+
+data:  n_ml_areas by course_group
+W = 107, p-value = 0.9319
+alternative hypothesis: true location shift is not equal to 0</code></pre>
+</div>
+</div>
+<p>We conducted a nonparametric test (particularly the Wilcoxon rank sum test) since the group of students who haven’t taken PSTAT 131 is fairly small, at 5 students. This test is used to determine whether two independent samples come from populations with the same distribution or median. Since the p-value is high enough, we fail to reject the null hypothesis and conclude that there is no difference in the number of machine learning interests between students who have or have not taken PSTAT 131.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fisher's exact test</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>area_long_134 <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(area) <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">took_134 =</span> <span class="fu">mean</span>(selected[group_134 <span class="sc">==</span> <span class="st">'Took PSTAT 134'</span>]),</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">not_134 =</span> <span class="fu">mean</span>(selected[group_134 <span class="sc">==</span> <span class="st">'Did not take PSTAT 134'</span>]),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">p_value =</span> <span class="fu">fisher.test</span>(<span class="fu">table</span>(group_134, selected))<span class="sc">$</span>p.value) <span class="sc">|&gt;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">caption =</span> <span class="st">"Fisher's exact test by ML area"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Fisher’s exact test by ML area</caption>
+<colgroup>
+<col style="width: 66%">
+<col style="width: 12%">
+<col style="width: 10%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">area</th>
+<th style="text-align: right;">took_134</th>
+<th style="text-align: right;">not_134</th>
+<th style="text-align: right;">p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Analysis or classification of images</td>
+<td style="text-align: right;">0.462</td>
+<td style="text-align: right;">0.583</td>
+<td style="text-align: right;">0.525</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Data acquisition and engineering</td>
+<td style="text-align: right;">0.769</td>
+<td style="text-align: right;">0.528</td>
+<td style="text-align: right;">0.191</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Deep learning and neural networks</td>
+<td style="text-align: right;">0.846</td>
+<td style="text-align: right;">0.778</td>
+<td style="text-align: right;">0.709</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Natural language processing and analysis of text</td>
+<td style="text-align: right;">0.462</td>
+<td style="text-align: right;">0.528</td>
+<td style="text-align: right;">0.754</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Predictive modeling, generally</td>
+<td style="text-align: right;">0.846</td>
+<td style="text-align: right;">0.889</td>
+<td style="text-align: right;">0.650</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Statistical models and inference, generally</td>
+<td style="text-align: right;">0.462</td>
+<td style="text-align: right;">0.694</td>
+<td style="text-align: right;">0.184</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Wiclxo rank sum test</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wilcox.test</span>(n_ml_areas <span class="sc">~</span> group_134, </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> ml_data_134, </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">exact =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Wilcoxon rank sum test with continuity correction
+
+data:  n_ml_areas by group_134
+W = 249.5, p-value = 0.7251
+alternative hypothesis: true location shift is not equal to 0</code></pre>
+</div>
+</div>
+<p>From the Fisher’s test, it seems like none of the six ML areas showed a statistically significant difference between the two groups, since every p value was well above 0.05. Even with the biggest gaps, like data engineering (p = 0.191) and statistical inference (p = 0.184), were not strong enough to rule out random chance. Additionally, the Wilcox rank sum test found no significant difference in the total of number of ML areas picked between the two groups (W = 249.5, p = 0.725). Meaning that students who took PSTAT 134 and those who didn’t showed pretty much the same overall level of interest in machine learning.</p>
+<p>Finally, we can check whether any of these differences are statistically significant. For each ML area, we use Fisher’s exact test, since it works well with small groups like our 13 students who took both courses. The test also gives an odds ratio, which tells us how much more (or less) likely 131 + 134 students were to select each area compared to 131 only students.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fisher_131 <span class="ot">&lt;-</span> area_131 <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(area) <span class="sc">|&gt;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">test =</span> <span class="fu">list</span>(<span class="fu">fisher.test</span>(<span class="fu">table</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">factor</span>(cohort, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">'131 only'</span>, <span class="st">'131 + 134'</span>)),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    selected))), <span class="at">.groups =</span> <span class="st">'drop'</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">p_value =</span> <span class="fu">map_dbl</span>(test, <span class="sc">~</span> .x<span class="sc">$</span>p.value),</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">odds_ratio =</span> <span class="fu">map_dbl</span>(test, <span class="sc">~</span> .x<span class="sc">$</span>estimate),</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">lower =</span> <span class="fu">map_dbl</span>(test, <span class="sc">~</span> .x<span class="sc">$</span>conf.int[<span class="dv">1</span>]),</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">upper =</span> <span class="fu">map_dbl</span>(test, <span class="sc">~</span> .x<span class="sc">$</span>conf.int[<span class="dv">2</span>])) <span class="sc">|&gt;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>test)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="fu">save_table</span>(fisher_131, <span class="st">'fisher_tests_131_vs_131_134.csv'</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(fisher_131, </span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">captions =</span> <span class="st">"Fisher's exact test by ML area: 131 only vs. 131 + 134"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 60%">
+<col style="width: 9%">
+<col style="width: 13%">
+<col style="width: 7%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">area</th>
+<th style="text-align: right;">p_value</th>
+<th style="text-align: right;">odds_ratio</th>
+<th style="text-align: right;">lower</th>
+<th style="text-align: right;">upper</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Analysis or classification of images</td>
+<td style="text-align: right;">0.522</td>
+<td style="text-align: right;">0.626</td>
+<td style="text-align: right;">0.137</td>
+<td style="text-align: right;">2.764</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Data acquisition and engineering</td>
+<td style="text-align: right;">0.198</td>
+<td style="text-align: right;">2.685</td>
+<td style="text-align: right;">0.543</td>
+<td style="text-align: right;">18.148</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Deep learning and neural networks</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.056</td>
+<td style="text-align: right;">0.144</td>
+<td style="text-align: right;">12.700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Natural language processing and analysis of text</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.808</td>
+<td style="text-align: right;">0.178</td>
+<td style="text-align: right;">3.558</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Predictive modeling, generally</td>
+<td style="text-align: right;">0.623</td>
+<td style="text-align: right;">0.597</td>
+<td style="text-align: right;">0.059</td>
+<td style="text-align: right;">8.059</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Statistical models and inference, generally</td>
+<td style="text-align: right;">0.309</td>
+<td style="text-align: right;">0.417</td>
+<td style="text-align: right;">0.088</td>
+<td style="text-align: right;">1.878</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>For every ML area, the p-value is well above 0.05, so none of the differences between the two groups are statistically significant. The largest gap was in the data acquisition and engineering, where students who took both courses had about 2.7 times the odds of selecting it compared to 131 only students (p = 0.198). In the other direction, they had the lower odds of selecting statistical models and inference (odds ratio = 0.417, p = 0.309). Deep learning and NLP were almost identical between the groups, with odds ratios close to 1 and p-values of 1.. Every 95% confidence interval also includes 1, and more are very wide (data engineering was ranging from 0.54 to 18.15). What this means is that our data is consistent with taking PSTAT 134 having no effect at all, and the small 131 + 134 group having 13 students makes it hard to find any real difference.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(fisher_131, <span class="fu">aes</span>(<span class="at">x =</span> odds_ratio, <span class="at">y =</span> <span class="fu">reorder</span>(area, odds_ratio))) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">1</span>, <span class="at">linetype =</span> <span class="st">'dashed'</span>, <span class="at">color =</span> <span class="st">'grey50'</span>) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbarh</span>(<span class="fu">aes</span>(<span class="at">xmin =</span> lower, <span class="at">xmax =</span> upper), <span class="at">height =</span> <span class="fl">0.2</span>, <span class="at">color =</span> <span class="st">'darkgrey'</span>) <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">'lightblue'</span>) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>() <span class="sc">+</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Odds of selecting each ML area: 131 + 134 vs. 131 only'</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">'Right of the dashed line = more likely among 131 + 134 students'</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">'Odds ratio (log scale) with 95% CI'</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">'plot'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="updated_report_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This odds ratio plot shows the same results visually. The points for data engineering and deep learning fall to the right of the dashed line, while the other four areas fall to the left. However, every confidence interval crosses the dashed line at 1, so none of these differences can be separated from random chance.</p>
+<p>Next, we compare the total number of ML areas each student selected. To achieve that, we can use a one sided Wilcoxon rank-sum test because the totals are small counts with only 13 students in one group, and our question asks whether 131 + 134 students report greater ML interest.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>test_result <span class="ot">&lt;-</span> <span class="fu">wilcox.test</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  ml_131<span class="sc">$</span>n_ml_areas[ml_131<span class="sc">$</span>cohort <span class="sc">==</span> <span class="st">'131 + 134'</span>],</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  ml_131<span class="sc">$</span>n_ml_areas[ml_131<span class="sc">$</span>cohort <span class="sc">==</span> <span class="st">'131 only'</span>],</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">'greater'</span>,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">exact =</span> <span class="cn">FALSE</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>test_result</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Wilcoxon rank sum test with continuity correction
+
+data:  ml_131$n_ml_areas[ml_131$cohort == "131 + 134"] and ml_131$n_ml_areas[ml_131$cohort == "131 only"]
+W = 186, p-value = 0.6654
+alternative hypothesis: true location shift is greater than 0</code></pre>
+</div>
+</div>
+<p>From this test it found no evidence that students who took both courses selected more ML areas than students who took only PSTAT 131 (W = 186, p = 0.665). In fact, their mean was slightly lower (3.85 vs.&nbsp;4.06). Together with the Fishers tests, this suggests that among students who have already taken PSTAT 131, also taking PSTAT 134 is not associated with greater interest in machine learning.</p>
 </section>
 <section id="interpretation-1" class="level4">
 <h4 class="anchored" data-anchor-id="interpretation-1">Interpretation</h4>
 <p>[Answer Q2 directly. Explain the practical meaning of the results. Discuss limitations specific to this comparison.]</p>
+<p>Since all of our significance tests, from comparing any pair from the three options (taken PSTAT 131, taken PSTAT 134, or neither), failed to reject any differences, there is no association with one’s interest in machine learning and the courses they have taken.</p>
+<p>Taking PSTAT 131 does not appear to be associated with electing more ML-related areas. The biggest gap showed up “Deep learning and neural networks”, but the overall counts were similar and the Wilcoxon test found no significant difference. That said, this comparison is limited. With 44 of the 49 respondents having taken PSTAT 131, almost the whole class shares the same intro ML background, and the comparison group is only 5 students. This tells us that PSTAT 131 alone does not do much to separate students in our sample, so a more informative question is whether going beyond 131 makes a difference.</p>
+<p>There a few things to consider when looking at these results. First, the groups are pretty unbalanced, with only 13 students who took PSTAT 134 compared to 36 who didn’t. That small group means one or two students can skew the percentage a lot, and our tests don’t have much power to pick up a real difference. Second, the “did not take PSTAT 134” group isn’t all the same, since it mixes 31 students who took PSTAT 131 with 5 who took neither course, so it isn’t a clean comparison. The survey also let students pick as many areas as they wanted, our six ML areas was more a judgment call, also the data is self reported interest rather than actual skill, and since students choose their own courses, we cant determine that PSTAT 134 caused any differences.</p>
+<p>Some drawbacks about this research question is that the survey allowed the respondent as many choices they wanted for area interests. In other words, someone could have checked all the boxes and make the cohorts even harder to determine. Ideally, we would have each person only selected one topic they are most interested in.</p>
+<p>Also, since there were multiple questions on the survey, with the interest question being near the end, many students may have felt fatigued and not thinking as deep for their true answers. Therefore, this survey may have not been a fair representation of students’ interests, or disinterest, in machine learning.</p>
 </section>
 </section>
 </section>
