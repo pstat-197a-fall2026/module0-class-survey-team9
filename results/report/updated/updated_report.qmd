@@ -79,17 +79,17 @@ ml_areas <- c(
 
 Machine Learning Interests:
 
-- "Analysis or classification of images"
+-   "Analysis or classification of images"
 
-- "Deep learning and neural networks",
+-   "Deep learning and neural networks",
 
-- "Data acquisition and engineering",
+-   "Data acquisition and engineering",
 
-- "Natural language processing and analysis of text",
+-   "Natural language processing and analysis of text",
 
-- "Predictive modeling, generally"
+-   "Predictive modeling, generally"
 
-- "Statistical models and inference, generally"
+-   "Statistical models and inference, generally"
 
 For ML interests, we chose these six areas because they were the most closely related to machine learning. Students were able to select from eleven areas of interest, and most of them can be argued to connect to ML in some way. However, this selection focuses primarily on areas involving building, training, or applying predictive models, or preparing the data those models rely on. We recognize that this choice of selection is somewhat subjective and that a different selection could lead to slightly different results.
 
