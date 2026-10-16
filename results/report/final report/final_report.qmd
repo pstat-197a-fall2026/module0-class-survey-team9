@@ -1,0 +1,349 @@
+---
+title: "PSTAT Coursework, Statistics Comfort, and Machine Learning Interest"
+subtitle: "Module 0: Analysis of Class Surveys"
+author: "Aileen Tao, Elijah Gabriel Ret, Erika Nares, Henry Ding, Khoi Huynh, Jacob Low"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-title: "Contents"
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-summary: "Show Code"
+    code-copy: true
+    theme: cosmo
+    embed-resources: true
+execute:
+  echo: true
+  message: false
+  warning: false
+  cache: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(knitr)
+library(ordinal)
+library(mgcv)
+here::i_am("results/report/final report/final_report.qmd")
+knitr::opts_chunk$set(fig.width = 8, fig.height = 5.5, fig.align = "center", out.width = "100%", dpi = 160)
+fmt <- function(x) sprintf("%.3f", x)
+mean_count <- function(group) sprintf("%.2f", mean(ml_131$n_ml_areas[ml_131$cohort == group]))
+```
+
+```{r}
+#| label: data-validation-and-q2-tests
+#| include: false
+q1 <- read_csv(here::here("data/processed/q1/q1-analysis.csv"), show_col_types = FALSE)
+bg <- read_csv(here::here("data/raw/background-clean.csv"), show_col_types = FALSE)
+interests <- read_csv(here::here("data/raw/interest-clean.csv"), show_col_types = FALSE)
+stopifnot(!anyDuplicated(q1$response_id), !anyDuplicated(bg$response_id), !anyDuplicated(interests$response_id))
+# Independently verify the exported Q1 counts against the original course selections.
+count_ud <- function(x) {
+  labels <- unique(str_squish(str_split(toupper(x), ",")[[1]]))
+  codes <- str_match(labels, "^PSTAT\\s*([0-9]+)\\s*([A-Z]?)$")
+  sum(!is.na(codes[, 2]) & as.integer(codes[, 2]) >= 100)
+}
+stopifnot(!anyNA(q1), all(vapply(q1$courses, count_ud, integer(1)) == q1$n_ud_pstat))
+stopifnot(all(q1$stat_comfort == bg$stat.comf[match(q1$response_id, bg$response_id)]))
+joined <- inner_join(bg, interests, by = "response_id")
+stopifnot(nrow(joined) == 49, !anyNA(joined[c("courses", "areas")]))
+ml_areas <- c("Analysis or classification of images", "Deep learning and neural networks",
+ "Data acquisition and engineering", "Natural language processing and analysis of text",
+ "Predictive modeling, generally", "Statistical models and inference, generally")
+joined <- joined |> mutate(took131 = str_detect(courses, "\\bPSTAT 131\\b"),
+ took134 = str_detect(courses, "\\bPSTAT 134\\b"))
+stopifnot(all(!joined$took134 | joined$took131))
+area_all <- joined |> crossing(area = ml_areas) |> mutate(selected = str_detect(areas, fixed(area)))
+area_131 <- area_all |> filter(took131) |> mutate(cohort = factor(if_else(took134, "131 + 134", "131 only"), levels = c("131 only", "131 + 134")))
+ml_131 <- area_131 |> group_by(response_id, cohort) |> summarise(n_ml_areas = sum(selected), .groups = "drop")
+
+props <- area_131 |> group_by(cohort, area) |> summarise(proportion = mean(selected), selected = sum(selected), n = n(), .groups = "drop")
+
+```
+
+```{r}
+#| label: q2-primary-tests
+#| include: false
+wt <- wilcox.test(ml_131$n_ml_areas[ml_131$cohort == "131 + 134"],
+ ml_131$n_ml_areas[ml_131$cohort == "131 only"], alternative = "greater", exact = FALSE)
+ft <- area_131 |> group_by(area) |> summarise(test = list(fisher.test(table(
+ factor(cohort, levels = c("131 only", "131 + 134")), factor(selected, levels = c(FALSE, TRUE))))), .groups = "drop") |>
+ mutate(p = vapply(test, function(x) x$p.value, numeric(1)),
+ OR = vapply(test, function(x) unname(x$estimate), numeric(1)),
+ lower = vapply(test, function(x) x$conf.int[1], numeric(1)),
+ upper = vapply(test, function(x) x$conf.int[2], numeric(1)))
+```
+
+```{r}
+#| label: verify-analysis-samples
+#| include: false
+
+# Verify samples and reproduce the primary tests independently from per-student scores.
+stopifnot(nrow(q1) == 51, nrow(ml_131) == 44,
+          all(as.integer(table(ml_131$cohort)) == c(31, 13)),
+          !anyNA(area_131$selected), all(ml_131$n_ml_areas %in% 0:6))
+for (i in seq_len(nrow(ft))) {
+  rows <- filter(area_131, area == ft$area[i])
+  both <- rows$selected[rows$cohort == "131 + 134"]
+  only <- rows$selected[rows$cohort == "131 only"]
+  # Reverse both dimensions to independently express selection odds for both / only.
+  check <- fisher.test(rbind(c(sum(both), sum(!both)), c(sum(only), sum(!only))))
+  stopifnot(isTRUE(all.equal(unname(check$estimate), ft$OR[i])),
+            isTRUE(all.equal(check$p.value, ft$p[i])),
+            isTRUE(all.equal(unname(check$conf.int[1:2]), c(ft$lower[i], ft$upper[i]))))
+}
+
+
+```
+
+```{r}
+#| label: q1-model-fit
+#| include: false
+# Data and models 
+model_data <- q1 |>
+  select(n_ud_pstat, stat_comfort) |> drop_na() |>
+  mutate(stat_comfort = ordered(stat_comfort, levels = 1:5))
+
+ordinal_fit <- clm(stat_comfort ~ n_ud_pstat, data = model_data, link = "logit")
+
+model_data$stat_comfort_int <- as.integer(as.character(model_data$stat_comfort))
+gam_fit <- gam(stat_comfort_int ~ s(n_ud_pstat, k = 3), family = ocat(R = 5), data = model_data)
+
+sp <- cor.test(model_data$n_ud_pstat, as.numeric(model_data$stat_comfort), method = "spearman", exact = FALSE)
+
+```
+
+```{r}
+#| label: q1-model-statistics
+#| include: false
+# Extract verified statistics for tables and narrative
+coef_row <- coef(summary(ordinal_fit))["n_ud_pstat", ]
+clm_or   <- exp(coef_row["Estimate"]); clm_p <- coef_row["Pr(>|z|)"]
+gam_p    <- summary(gam_fit)$s.table[1, "p-value"]
+gam_dev  <- summary(gam_fit)$dev.expl
+rho <- unname(sp$estimate); sp_p <- sp$p.value
+```
+
+# Executive Summary
+
+This project uses class survey responses to examine whether completed PSTAT coursework is associated with self-reported statistics comfort and machine learning (ML) interests. Of 55 survey respondents, 51 shared background responses used for Question 1 and 49 shared both background and project-interest responses; the primary Question 2 comparison includes 44 students who completed PSTAT 131. First, we ask whether the number of upper-division PSTAT course selections is associated with statistics comfort. Ordinal logistic regression (odds ratio `r sprintf("%.2f", clm_or)`, *p* = `r fmt(clm_p)`), an ordinal generalized additive model (GAM; *p* = `r fmt(gam_p)`), and Spearman correlation (ρ = `r sprintf("%.2f", rho)`, *p* = `r fmt(sp_p)`) do not detect a clear association. Second, we ask whether students who completed both PSTAT 131 and PSTAT 134 select more ML-related interest areas than those who completed PSTAT 131 without PSTAT 134. The groups have similar mean counts (`r mean_count("131 + 134")` versus `r mean_count("131 only")`) and the same median (4 of 6); a one-sided Wilcoxon rank-sum test (*p* = `r fmt(wt$p.value)`) and six two-sided Fisher exact tests find no statistically significant differences. These findings suggest that course history alone provides limited differentiation of comfort or interest within this class. Small, uneven groups and restricted response variation leave substantial uncertainty; the results do not establish equivalence or causal effects of coursework.
+
+## Data description {.unnumbered}
+
+The supplied survey files contain self-reported completed courses, technical proficiency and comfort, research background, and project preferences and interests. Aggregate summaries cover all 55 respondents; 49 (89.1%) were seniors. Individual background data are available for 51 consenting respondents and project-interest data for 49, all of whom can be linked to background responses using artificial respondent identifiers. The analyses use these shared responses rather than treating all 55 respondents as individual-level observations. No missing values are imputed. Detailed variable definitions and analysis-specific samples appear below.
+
+## Questions of interest {.unnumbered}
+
+1. Is the number of upper-division PSTAT courses reported as completed associated with self-reported statistics comfort?
+2. Among students who completed PSTAT 131, do those who also completed PSTAT 134 report greater breadth of ML-related interests?
+
+## Findings {.unnumbered}
+
+The following two question sections present the descriptive and statistical findings in parallel, followed by a joint conclusion.
+
+# Question 1: PSTAT Coursework and Statistics Comfort
+
+## Research Question
+
+**Is the number of upper-division PSTAT courses a student has completed associated with their self-reported comfort with statistics?** Coursework may reflect exposure to statistical ideas and practice, but students with similar preparation may differ in confidence. We examine both a monotonic association and a possible nonlinear relationship.
+
+## Data and Sample
+
+Question 1 includes all `r nrow(q1)` shared background respondents, with no missing values in the analysis variables. The predictor, `n_ud_pstat`, counts distinct reported PSTAT course labels numbered 100 or higher; non-PSTAT selections are excluded, and letter suffixes distinguish course labels. We verify these counts against the supplied course lists and comfort values against the background file. The survey excludes courses in progress. A series label such as PSTAT 120 represents completion of at least one course in that series, so this measure counts reported selections rather than reconstructing every individual course completed.
+
+The outcome, `stat_comfort`, is an ordinal numeric rating of comfort with statistics and probability. Observed ratings are 3, 4, and 5; the supplied metadata documents observed values rather than full questionnaire bounds. The models use five category positions, while the logistic model estimates probabilities for the three observed categories. Means summarize the coded ratings descriptively and assume equal spacing; ordinal and rank-based methods avoid using a linear regression on those means.
+
+## Descriptive Results
+
+Comfort is concentrated at the high end: `r sum(q1$stat_comfort == 3)` students report 3, `r sum(q1$stat_comfort == 4)` report 4, and `r sum(q1$stat_comfort == 5)` report 5. Overall, `r sprintf("%.1f", 100 * mean(q1$stat_comfort >= 4))`% report 4 or 5, with mean comfort `r sprintf("%.2f", mean(q1$stat_comfort))`. Course counts range from 2 to 10, with 43 of 51 students (84.3%) between 4 and 7 courses. Five of the nine course-count groups contain fewer than five students.
+
+```{r}
+#| label: tbl-q1-summary
+#| tbl-cap: "Statistics comfort by upper-division PSTAT course count."
+q1 |> group_by(n_ud_pstat) |>
+ summarise(Students = n(), `Mean comfort` = mean(stat_comfort),
+ `% rating 4 or 5` = 100 * mean(stat_comfort >= 4), .groups = "drop") |>
+ rename(`UD PSTAT courses` = n_ud_pstat) |> kable(digits = 2)
+```
+
+For the better-represented groups (4–7 courses), mean comfort is 4.00, 4.22, 4.00, and 4.00. The share rating 4 or 5 ranges from 67% to 94%, without a consistent trend. Extreme group means at the edges reflect only one or two students and should not be interpreted as reliable evidence of curvature.
+
+
+```{r}
+#| label: fig-q1-3
+#| echo: false
+#| fig-cap: "Comfort ratings within each course-count group; labels indicate group sizes. Groups at the extremes contain only one or two respondents."
+knitr::include_graphics(here::here("results/q1/figures/fig3_comfort_distribution_by_courses.png"))
+```
+
+
+## Statistical Analysis and Results
+
+The ordinal logistic model uses a logit link and assumes that each additional course has a constant association with the cumulative odds of higher comfort (proportional odds). The ordinal GAM uses the ordered-categorical specification, `ocat(R = 5)`, with a small smooth basis (`k = 3`) to explore nonlinearity. Spearman correlation assesses a monotonic relationship using ranks. All three tests are two-sided or nondirectional tests of no association, assessed at 0.05. The smooth-term test is approximate; no adjustment is made for using several complementary approaches.
+
+```{r}
+#| label: q1-analysis-code
+#| ref.label: q1-model-fit
+#| eval: false
+```
+
+```{r}
+#| label: tbl-q1-models
+#| tbl-cap: "Complementary analyses of course count and statistics comfort."
+tibble(Method = c("Ordinal logistic regression", "Ordinal GAM (k = 3)", "Spearman rank correlation"),
+ `Key estimate` = c(sprintf("Odds ratio = %.3f", clm_or), sprintf("Deviance explained = %.1f%%", 100 * gam_dev), sprintf("rho = %.3f", rho)),
+ `p-value` = c(clm_p, gam_p, sp_p)) |> kable(digits = 3)
+```
+
+The logistic estimate is close to an odds ratio of 1, with no statistically significant association. Its predicted category probabilities change little over the observed course range. The GAM produces a U-shaped fitted curve, but its smooth term is not statistically significant and explains only about `r sprintf("%.1f", 100 * gam_dev)`% of deviance. Sparse groups at the extremes make this curve uncertain; its shape does not establish a nonlinear relationship. Spearman correlation is weakly negative and also nonsignificant. The following figures show the fitted category probabilities and the uncertainty in the GAM smooth effect (@fig-q1-5 and @fig-q1-7).
+
+```{r}
+#| label: fig-q1-5
+#| echo: false
+#| fig-cap: "Ordinal logistic predicted probabilities for the observed comfort ratings, with pointwise 95% confidence intervals."
+knitr::include_graphics(here::here("results/q1/figures/fig5_ordinal_predicted_probabilities.png"))
+```
+
+
+```{r}
+#| label: fig-q1-7
+#| echo: false
+#| fig-cap: "Ordinal GAM smooth effect on the centered latent comfort scale, with a pointwise 95% confidence band. Rug marks show observed course counts."
+knitr::include_graphics(here::here("results/q1/figures/fig7_gam_smooth_effect.png"))
+```
+
+
+## Interpretation
+
+The three methods consistently fail to detect an association between completed upper-division PSTAT selections and statistics comfort in this sample. A rating near 4 is typical across the groups with enough students to compare. Agreement among the methods supports the descriptive conclusion of no clear pattern, but these analyses use the same respondents and are not independent replications. A modest association could remain undetected, and the apparent U-shape is too uncertain to treat as a substantive finding.
+
+## Limitations
+
+- **Small and uneven groups:** five of nine course-count groups have fewer than five students, leaving the extremes especially unstable.
+- **Restricted outcome variation:** no ratings below 3 occur, limiting the ability to distinguish students by comfort.
+- **Self-report and measurement:** subjective comfort is not demonstrated skill; counting course selections also cannot recover all courses within a series or their depth, performance, and timing.
+- **Model assumptions:** proportional odds and a constant per-course association constrain the logistic model; the GAM is exploratory and sensitive to sparse observations. Several complementary tests do not establish equivalence.
+- **Observational sample:** prior background, major, course performance, and other potential confounders are not adjusted for. A single class and consent-based availability limit generalizability and preclude causal conclusions.
+
+# Question 2: PSTAT Coursework and Machine Learning Interest
+
+## Research Question
+
+**Among students who completed PSTAT 131, do those who also completed PSTAT 134 report greater breadth of ML-related interests than those who completed PSTAT 131 without PSTAT 134?** This comparison holds reported PSTAT 131 completion in common and examines whether additional coursework distinguishes interests. It does not measure changes caused by PSTAT 134.
+
+## Data and Sample
+
+Background and project-interest responses are joined by `response_id`, yielding 49 matched respondents with complete course and interest text. Of these, 44 report PSTAT 131: 31 completed **131 only** and 13 completed **131 + 134**. Here, “131 only” means without PSTAT 134; students may have completed other courses. All 13 PSTAT 134 respondents also report PSTAT 131. The five respondents without PSTAT 131 are excluded from the primary comparison.
+
+We use six ML-related areas: image analysis or classification; deep learning and neural networks; data acquisition and engineering; natural language processing and text analysis; predictive modeling; and statistical models and inference. Complete option labels are matched within the response text, avoiding erroneous splitting at commas inside option labels. Each selected area contributes one point to a count from 0 to 6. This count measures **breadth of selected interests**, not intensity of interest or ML proficiency. These six areas are an analytic selection from the survey options, not a validated scale.
+
+## Descriptive Results
+
+```{r}
+#| label: tbl-q2-summary
+#| tbl-cap: "Breadth of ML interests among PSTAT 131 respondents."
+ml_131 |> group_by(cohort) |> summarise(Students = n(), Mean = mean(n_ml_areas),
+ Median = median(n_ml_areas), Minimum = min(n_ml_areas), Maximum = max(n_ml_areas), .groups = "drop") |>
+ rename(Group = cohort) |> kable(digits = 2)
+```
+
+Students with both courses select slightly fewer areas on average (`r mean_count("131 + 134")` versus `r mean_count("131 only")`); both groups have a median of 4. Most select between 3 and 5 areas. Some 131-only students select all six, whereas none in the smaller group do.
+
+```{r}
+#| label: fig-q2-distribution
+#| echo: false
+#| fig-cap: "Distribution of ML-related interest counts by course group. Boxes show the median and interquartile range; whiskers show values within 1.5 interquartile ranges."
+knitr::include_graphics(here::here("results/q2/figures/fig_3_ml_interests_131_vs_131_134.png"))
+```
+
+```{r}
+#| label: tbl-q2-areas
+#| tbl-cap: "Selection of each ML-related area by course group (count and percentage)."
+props |> mutate(value = sprintf("%d/%d (%.1f%%)", selected, n, 100 * proportion)) |>
+ select(area, cohort, value) |> pivot_wider(names_from = cohort, values_from = value) |>
+ rename(`Interest area` = area) |> kable()
+```
+
+The largest positive percentage gap is for data acquisition and engineering (76.9% with both courses versus 54.8% with 131 only); statistical models and inference are selected less often by students with both courses (46.2% versus 67.7%). These are descriptive differences with considerable sampling uncertainty.
+
+
+## Statistical Analysis and Results
+
+The primary test is a **one-sided Wilcoxon rank-sum test**, with the 131 + 134 group supplied first. The null is a common distribution of selected-area counts; the directional alternative is that counts tend to be higher in the 131 + 134 group. This is not solely a test of medians without additional distributional assumptions. Because the counts contain ties, we use the original asymptotic calculation (`exact = FALSE`) with continuity correction. The result is **W = `r unname(wt$statistic)`, *p* = `r fmt(wt$p.value)`**. It provides no evidence that students with both courses select more ML areas.
+
+For each individual area, a **two-sided Fisher exact test** assesses the null of independence between course group and selection (odds ratio 1), against an association in either direction. The tables fix group order as 131 only, then 131 + 134, and selection order as unselected, then selected. Consequently, reported odds ratios compare selection odds for **131 + 134 relative to 131 only**. These exploratory tests use unadjusted p-values; none is significant even before accounting for six comparisons.
+
+```{r}
+#| label: q2-primary-test-code
+#| ref.label: q2-primary-tests
+#| eval: false
+```
+
+```{r}
+#| label: tbl-q2-fisher
+#| tbl-cap: "Two-sided Fisher exact tests: selection odds for 131 + 134 relative to 131 only."
+ft |> transmute(`Interest area` = area, `Odds ratio` = OR,
+ `95% confidence interval` = sprintf("%.3f to %.3f", lower, upper), `p-value` = p) |>
+ kable(digits = 3)
+```
+
+Every interval includes 1. The data-engineering estimate favors the group with both courses, while the statistical-inference estimate favors 131 only, but neither difference is statistically significant. Wide intervals permit associations in either direction.
+
+```{r}
+#| label: fig-q2-odds
+#| echo: false
+#| fig-cap: "Conditional selection odds ratios and exact 95% confidence intervals; the reference line denotes equal odds."
+knitr::include_graphics(here::here("results/report/updated/updated_report_files/figure-html/unnamed-chunk-14-1.png"))
+```
+
+```{r}
+#| include: false
+#| label: q2-supporting
+all_scores <- area_all |> group_by(response_id, took131, took134) |>
+ summarise(score = sum(selected), .groups = "drop")
+supporting <- lapply(c("took131", "took134"), function(v) {
+ x <- all_scores$score[!all_scores[[v]]]; y <- all_scores$score[all_scores[[v]]]
+ test <- wilcox.test(x, y, exact = FALSE)
+ tibble(Comparison = ifelse(v == "took131", "No 131 vs 131", "No 134 vs 134"),
+ `Group sizes` = paste(length(x), length(y), sep = " / "),
+ `Group means` = sprintf("%.2f / %.2f", mean(x), mean(y)),
+ W = unname(test$statistic), `p-value` = test$p.value)
+}) |> bind_rows()
+supporting |> kable(digits = 3)
+```
+
+```{r}
+#| include: false
+#| label: q2-supporting-fisher
+area_all |> group_by(area) |> summarise(
+ `No 134 (%)` = 100 * mean(selected[!took134]),
+ `134 (%)` = 100 * mean(selected[took134]),
+ `p-value` = fisher.test(table(took134, selected))$p.value, .groups = "drop") |>
+ rename(`Interest area` = area) |> kable(digits = 3)
+```
+
+## Interpretation
+
+Among students who completed PSTAT 131, this survey does not show greater breadth of ML interests for those who also completed PSTAT 134. Overall counts are similar, and area-specific differences remain uncertain. The pattern for data engineering may be useful for describing these respondents' preferences, but it is not established as a broader group difference. Course completion alone therefore offers limited guidance for distinguishing interests in this class; directly asking students about project interests remains useful.
+
+## Limitations
+
+- **Small, uneven groups:** 13 students with both courses are compared with 31 with 131 only. One response changes a percentage in the smaller group by about 7.7 points, and confidence intervals are wide.
+- **Interest measurement:** respondents could select multiple areas, so the count captures breadth rather than priority or strength. The six-area definition is subjective and includes broad statistical interests.
+- **Survey response:** interests and course history are self-reported. Consent-based availability may affect representativeness; fatigue is possible but was not measured and cannot be assumed to explain the results.
+- **Confounding and timing:** students choose courses and may already differ in interests or background. The cross-sectional survey does not establish whether courses precede interests or change them.
+- **Multiple comparisons and power:** six exploratory area tests increase opportunities for chance findings. Nonsignificant results do not demonstrate equivalence or exclude meaningful differences.
+
+# Final Conclusion
+
+The two analyses find limited evidence that completed PSTAT coursework differentiates students' self-reported comfort or breadth of ML interests within this class. For Question 1, comfort is concentrated near 4 and neither an ordinal logistic model, an ordinal GAM, nor rank correlation detects an association with course count. For Question 2, students with PSTAT 131 and PSTAT 134 select about as many ML-related areas as those with PSTAT 131 alone; neither the directional overall test nor the area-specific tests detects a statistically significant difference.
+
+The shared result is uncertainty around coursework as a marker of students' self-assessments and preferences, rather than evidence that coursework is unimportant. Question 1 is especially constrained by restricted comfort ratings and sparse extreme course counts; Question 2 by a small advanced-course group and a broad interest-count measure. Both use self-selected, observational responses from a single class and leave potential confounding unaddressed. For project planning, course history can describe preparation, but direct measures of comfort and interests provide additional information. A larger, more varied sample with repeated measurements would be needed to assess smaller associations and changes over time.
