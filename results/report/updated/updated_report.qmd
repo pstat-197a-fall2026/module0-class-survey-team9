@@ -47,6 +47,9 @@ save_table <- function(data, filename) {
 ## Executive summary
 
 \[Write one short paragraph covering the purpose of the survey analysis, the two research questions, the main finding for each question, and the overall takeaway. Write this section last.\]
+For our second question, we asked: Do students who have taken both PSTAT 131 and PSTAT 134 report greater interest in machine learning related areas than students who have taken PSTAT 131 only?
+
+Among the 44 students in our sample who took PSTAT 131, we found no statistically significant difference. Students who also took PSTAT 134 selected about the same number of ML areas as those who stopped at 131 (both with a median of 4 out of 6), and two different approaches (a Wilcoxon rank-sum test on the total score and Fisher's exact tests on each ML area) all fail to find a difference distinguishable from chance. Only 13 students took PSTAT 134, so the results are better interpreted as "no clear pattern" than as "taking PSTAT 134 has no effect".
 
 ## Data description
 
@@ -446,6 +449,9 @@ Also, since there were multiple questions on the survey, with the interest quest
 ## Conclusion
 
 \[Briefly bring together the answers to both questions. State the overall takeaway and shared limitations. Do not introduce new analyses or figures.\]
+We see a similar result when moving from statistics comfort to machine learning interest. Among students who took PSTAT 131, those who also took PSTAT 134 did not report more interest in machine learning. Both groups selected about the same number of ML areas (3.85 vs. 4.06 on average, both with a median of 4), and neither Fisher's exact tests on the individual areas nor a Wilcoxon rank-sum test on the total score detected a difference. PSTAT 134 students leaned slightly more toward data engineering and away from statistical inference, but these gaps could easily just be random chance.
+
+Overall, neither question found a meaningful link between the courses students have taken and their statistics comfort or ML interest. However, something to note is that our sample was just too small and too similar to reliably detect a relationship: most respondents were seniors with comparable coursework, and key groups were small, with only 13 students who took PSTAT 134 and only a handful at the low and high ends of course counts. A larger and more varied sample would be needed to tell whether any real associations exist.
 
 ## Appendix
 

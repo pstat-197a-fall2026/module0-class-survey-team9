@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.25">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -11,10 +11,16 @@
 
 <title>Module 0 Project: Analysis of Class Surveys</title>
 <style>
-code{white-space: pre-wrap;}
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -28,15 +34,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="updated_report_files/libs/clipboard/clipboard.min.js"></script>
 <script src="updated_report_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="updated_report_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="updated_report_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="updated_report_files/libs/quarto-html/popper.min.js"></script>
 <script src="updated_report_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="updated_report_files/libs/quarto-html/anchor.min.js"></script>
 <link href="updated_report_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="updated_report_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="updated_report_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="updated_report_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="updated_report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="updated_report_files/libs/bootstrap/bootstrap-fc78cc84e086300a0584af8142339858.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="updated_report_files/libs/bootstrap/bootstrap-22b4c1abd28e63ff45684f4962f09b6b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -103,7 +108,8 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="executive-summary" class="level2">
 <h2 class="anchored" data-anchor-id="executive-summary">Executive summary</h2>
-<p>[Write one short paragraph covering the purpose of the survey analysis, the two research questions, the main finding for each question, and the overall takeaway. Write this section last.]</p>
+<p>[Write one short paragraph covering the purpose of the survey analysis, the two research questions, the main finding for each question, and the overall takeaway. Write this section last.] For our second question, we asked: Do students who have taken both PSTAT 131 and PSTAT 134 report greater interest in machine learning related areas than students who have taken PSTAT 131 only?</p>
+<p>Among the 44 students in our sample who took PSTAT 131, we found no statistically significant difference. Students who also took PSTAT 134 selected about the same number of ML areas as those who stopped at 131 (both with a median of 4 out of 6), and two different approaches (a Wilcoxon rank-sum test on the total score and Fisher’s exact tests on each ML area) all fail to find a difference distinguishable from chance. Only 13 students took PSTAT 134, so the results are better interpreted as “no clear pattern” than as “taking PSTAT 134 has no effect”.</p>
 </section>
 <section id="data-description" class="level2">
 <h2 class="anchored" data-anchor-id="data-description">Data description</h2>
@@ -518,7 +524,8 @@ alternative hypothesis: true location shift is greater than 0</code></pre>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>[Briefly bring together the answers to both questions. State the overall takeaway and shared limitations. Do not introduce new analyses or figures.]</p>
+<p>[Briefly bring together the answers to both questions. State the overall takeaway and shared limitations. Do not introduce new analyses or figures.] We see a similar result when moving from statistics comfort to machine learning interest. Among students who took PSTAT 131, those who also took PSTAT 134 did not report more interest in machine learning. Both groups selected about the same number of ML areas (3.85 vs.&nbsp;4.06 on average, both with a median of 4), and neither Fisher’s exact tests on the individual areas nor a Wilcoxon rank-sum test on the total score detected a difference. PSTAT 134 students leaned slightly more toward data engineering and away from statistical inference, but these gaps could easily just be random chance.</p>
+<p>Overall, neither question found a meaningful link between the courses students have taken and their statistics comfort or ML interest. However, something to note is that our sample was just too small and too similar to reliably detect a relationship: most respondents were seniors with comparable coursework, and key groups were small, with only 13 students who took PSTAT 134 and only a handful at the low and high ends of course counts. A larger and more varied sample would be needed to tell whether any real associations exist.</p>
 </section>
 <section id="appendix" class="level2">
 <h2 class="anchored" data-anchor-id="appendix">Appendix</h2>
