@@ -28,20 +28,6 @@ library(tidyr)
 library(knitr)
 library(scales)
 library(purrr)
-
-fig_dir <- "../../results/q2/figures"
-table_dir <- "../../results/q2/tables"
-
-dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
-
-save_table <- function(data, filename) {
-  write.csv(
-    data,
-    file.path(table_dir, filename),
-    row.names = FALSE
-  )
-}
 ```
 
 ## Executive summary
@@ -154,8 +140,6 @@ ml_summary <- ml_data_131 %>%
     median_ml_areas = median(n_ml_areas),
     .groups = "drop"
   )
-
-save_table(ml_summary, "ml_interest_summary_by_pstat131.csv")
 
 kable(
   ml_summary,
@@ -321,8 +305,6 @@ comparison_proportions <- area_131 |>
             proportion = n_selected / n_students, 
             .groups = 'drop')
 
-save_table(comparison_proportions, 'ml_area_proportions_131_vs_131_134.csv')
-
 comparison_plot <- ggplot(comparison_proportions,
                           aes(x = area, y = proportion, fill = cohort)) +
   geom_col(position = 'dodge') +
@@ -333,14 +315,6 @@ comparison_plot <- ggplot(comparison_proportions,
   theme(axis.text.x = element_text(angle = 35, hjust = 1))
 
 comparison_plot
-
-ggsave(
-  file.path(fig_dir, "fig_4_ml_area_proportions_131_vs_131_134.png"),
-  plot = comparison_plot,
-  width = 11,
-  height = 7,
-  dpi = 300
-)
 ```
 
 This follows from the same pattern as the PSTAT 134 vs. non-134 comparison. Students who took both courses leaned more toward data acquistiion and engineering (77% vs. 55%) and less toward statistical inference (46% vs. 68%). The other areas were fairly similar between the two groups.
@@ -392,8 +366,6 @@ fisher_131 <- area_131 |>
          lower = map_dbl(test, ~ .x$conf.int[1]),
          upper = map_dbl(test, ~ .x$conf.int[2])) |>
   select(-test)
-
-save_table(fisher_131, 'fisher_tests_131_vs_131_134.csv')
 
 kable(fisher_131, 
       digits = 3,
